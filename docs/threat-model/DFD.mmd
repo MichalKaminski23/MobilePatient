@@ -1,0 +1,51 @@
+flowchart TB
+    %% Encje zewnętrzne
+    USER["[Encja] Pacjent / Lekarz"]
+    OTHER_APPS["[Encja] Inne aplikacje (Deep Link)"]
+    EXT_WEB["[Encja] Zewnętrzny Serwer WWW (RODO)"]
+    EXT_MAPS["[Encja] Google Maps API"]
+    EXT_FCM["[Encja] Firebase Cloud Messaging (FCM)"]
+
+    %% Sandbox aplikacji i urządzenia
+    subgraph SANDBOX["--- Granica zaufania: Urządzenie / Sandbox Androida ---"]
+        APP(("Proces: Aplikacja Mobilna\n(Jetpack Compose)"))
+        KEYSTORE[("Magazyn: Android Keystore /\nEncryptedSharedPreferences")]
+        CACHE[("Magazyn: Pamięć podręczna (RAM / Cache)")]
+        LOGS[("Magazyn: Logi systemowe (Logcat)")]
+    end
+
+    %% Przestrzeń sieciowa
+    subgraph NET_ZONE["--- Granica zaufania: Niezaufana Sieć (Internet) ---"]
+        NET_FLOW["Żądania HTTPS + Bearer JWT / Ruch sieciowy"]
+    end
+
+    %% Chmura backendowa
+    subgraph SERVER["--- Granica zaufania: Środowisko Backendowe (Supabase) ---"]
+        API(("Proces: Supabase API / Auth"))
+        DB[("Magazyn: PostgreSQL\n(profile, wizyty, recepty, przychodnie)")]
+        STORAGE[("Magazyn: Supabase Storage\n(prywatny bucket: skany medyczne)")]
+    end
+
+    %% Przepływy na urządzeniu
+    USER -->|Login, hasło, biometria| APP
+    APP <-->|Szyfrowany token sesji| KEYSTORE
+    APP -.->|Tymczasowe dane wizyt| CACHE
+    APP -.->|"Zdarzenia / ewentualne wycieki (T07)"| LOGS
+    OTHER_APPS -->|"Wywołanie medapp://visit/{id} (T08)"| APP
+
+    %% Przepływy przez sieć do backendu
+    APP <-->|"Zapytania REST z tokenem JWT (T02)"| NET_ZONE
+    NET_ZONE <--> API
+
+    %% Przepływy z usługami zewnętrznymi
+    APP -.->|"Wczytanie treści RODO w WebView (T09)"| EXT_WEB
+    APP -.->|Współrzędne i pobranie kafelków mapy| EXT_MAPS
+    API -.->|"Wyzwalacz powiadomienia o wizycie (T12)"| EXT_FCM
+    EXT_FCM -.->|Push notification na ekran blokady| APP
+
+    %% Przepływy wewnątrz backendu
+    API <-->|"Operacje SQL z regułami RLS (T03, T04, T05)"| DB
+    API <-->|"Prywatny odczyt / upload plików (T06)"| STORAGE
+
+    classDef boundary stroke-dasharray: 5 5;
+    class SANDBOX,SERVER,NET_ZONE boundary;
