@@ -1,6 +1,5 @@
 package pl.polsl.mobilepatient
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,11 +9,12 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
 import pl.polsl.mobilepatient.ui.auth.LoginScreen
-import pl.polsl.mobilepatient.ui.patient.PatientDashboardScreen
+import pl.polsl.mobilepatient.ui.common.MainDashboardScreen
+import pl.polsl.mobilepatient.ui.theme.MobilePatientTheme
 
 @Composable
 fun MobilePatientApp() {
-    MaterialTheme {
+    MobilePatientTheme {
         val authRepository = remember { AuthRepository() }
         var loggedInRole by remember { mutableStateOf<String?>(null) }
         var loggedInName by remember { mutableStateOf("") }
@@ -28,7 +28,7 @@ fun MobilePatientApp() {
                 }
             )
         } else {
-            PatientDashboardScreen(
+            MainDashboardScreen(
                 role = loggedInRole!!,
                 userName = loggedInName,
                 onLogout = {

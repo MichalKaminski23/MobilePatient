@@ -1,3 +1,0 @@
-Zrzut ekranu z zakładki Merged Manifest w Android Studio z dowodem braku zbędnych wpisów (tools:node="remove", jeśli zajdzie potrzeba).
-
-Test odwołania uprawnienia przez adb shell pm revoke pl.polsl.mobilnypacjent android.permission.CAMERA i zrzut ekranu pokazujący komunikat UI zamiast crasha aplikacji.
