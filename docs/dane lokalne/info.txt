@@ -1,0 +1,1 @@
+Plik docs/dane-lokalne.md klasyfikujący token sesji, cache i dane konfiguracyjne przed zajęciami Z4.

@@ -8,7 +8,7 @@
 | **Technologia** | Android (Kotlin, Jetpack Compose) + Supabase |
 | **Zajęcia nr** | 2 |
 | **Temat zajęć** | Modelowanie zagrożeń i architektura |
-| **Obszar MASVS** | - |
+| **Obszar MASVS** | MASVS-PLATFORM, MASVS-AUTH, MASVS-STORAGE |
 | **Osoby obecne** | Michał Kamiński, Patryk Czakon |
 
 ---
