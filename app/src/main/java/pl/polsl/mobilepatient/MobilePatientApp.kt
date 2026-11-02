@@ -10,10 +10,13 @@ import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
 import pl.polsl.mobilepatient.ui.auth.LoginScreen
 import pl.polsl.mobilepatient.ui.common.MainDashboardScreen
+import pl.polsl.mobilepatient.ui.doctor.DoctorDashboardScreen
 import pl.polsl.mobilepatient.ui.theme.MobilePatientTheme
 
 @Composable
-fun MobilePatientApp() {
+fun MobilePatientApp(
+    deepLinkPatientId: String? = null
+) {
     MobilePatientTheme {
         val authRepository = remember { AuthRepository() }
         var loggedInRole by remember { mutableStateOf<String?>(null) }
@@ -28,17 +31,31 @@ fun MobilePatientApp() {
                 }
             )
         } else {
-            MainDashboardScreen(
-                role = loggedInRole!!,
-                userName = loggedInName,
-                onLogout = {
-                    scope.launch {
-                        authRepository.signOut()
-                        loggedInRole = null
-                        loggedInName = ""
-                    }
+            val logoutAction = {
+                scope.launch {
+                    authRepository.signOut()
+                    loggedInRole = null
+                    loggedInName = ""
                 }
-            )
+                Unit
+            }
+
+            when (loggedInRole) {
+                "doctor" -> {
+                    DoctorDashboardScreen(
+                        userName = loggedInName,
+                        onLogout = logoutAction,
+                        initialTargetPatientId = deepLinkPatientId
+                    )
+                }
+                else -> {
+                    MainDashboardScreen(
+                        role = loggedInRole!!,
+                        userName = loggedInName,
+                        onLogout = logoutAction
+                    )
+                }
+            }
         }
     }
 }
