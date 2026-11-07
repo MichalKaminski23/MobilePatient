@@ -2,6 +2,7 @@ package pl.polsl.mobilepatient
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
@@ -11,6 +12,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SupabaseProvider.init(applicationContext)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
         ThemeManager.init(applicationContext)
         val deepLinkPatientId = extractPatientIdFromIntent(intent)
         setContent {
