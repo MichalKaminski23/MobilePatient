@@ -19,6 +19,10 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = DarkNavyOnSecondary,
     secondaryContainer = DarkNavySecondaryContainer,
     onSecondaryContainer = DarkNavyOnSecondaryContainer,
+    tertiary = DarkNavyTertiary,
+    onTertiary = DarkNavyOnTertiary,
+    tertiaryContainer = DarkNavyTertiaryContainer,
+    onTertiaryContainer = DarkNavyOnTertiaryContainer,
     background = DarkNavyBackground,
     onBackground = DarkNavyOnBackground,
     surface = DarkNavySurface,
@@ -53,7 +57,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MobilePatientTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Domyślnie false, aby zachować spójną granatową paletę aplikacji medycznej
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

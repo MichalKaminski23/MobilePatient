@@ -13,7 +13,6 @@ data class MedicalFileDto(
     val mime_type: String,
     val created_at: String? = null,
     val signed_url: String? = null,
-    @kotlinx.serialization.Transient
     val local_bytes: ByteArray? = null
 )
 

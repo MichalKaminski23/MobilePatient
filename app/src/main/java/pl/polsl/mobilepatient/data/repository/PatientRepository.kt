@@ -3,7 +3,6 @@ package pl.polsl.mobilepatient.data.repository
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
-import kotlin.time.Duration.Companion.hours
 import pl.polsl.mobilepatient.data.dto.AppointmentDto
 import pl.polsl.mobilepatient.data.dto.AppointmentInsertDto
 import pl.polsl.mobilepatient.data.dto.ClinicDto
@@ -11,16 +10,36 @@ import pl.polsl.mobilepatient.data.dto.MedicalFileDto
 import pl.polsl.mobilepatient.data.dto.MedicalFileInsertDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
 import pl.polsl.mobilepatient.data.dto.PatientAppointmentDetailsDto
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
 import pl.polsl.mobilepatient.data.dto.PrescriptionDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
+import kotlin.time.Duration.Companion.hours
 
 class PatientRepository {
 
     private val client = SupabaseProvider.client
 
-    fun getCurrentUserId(): String? {
-        return client.auth.currentUserOrNull()?.id
+    suspend fun getCurrentUserId(): String? {
+        val direct = client.auth.currentUserOrNull()?.id
+            ?: client.auth.currentSessionOrNull()?.user?.id
+        if (!direct.isNullOrBlank()) {
+            SupabaseProvider.cachedUserId = direct
+            return direct
+        }
+
+        try {
+            client.auth.awaitInitialization()
+        } catch (_: Exception) {
+        }
+
+        val afterInit = client.auth.currentUserOrNull()?.id
+            ?: client.auth.currentSessionOrNull()?.user?.id
+        if (!afterInit.isNullOrBlank()) {
+            SupabaseProvider.cachedUserId = afterInit
+            return afterInit
+        }
+
+        return SupabaseProvider.cachedUserId
     }
 
     suspend fun getMyMedicalRecords(): Result<List<MedicalRecordDto>> {
@@ -102,7 +121,11 @@ class PatientRepository {
                 val signedUrl = try {
                     bucket.createSignedUrl(path = file.storage_path, expiresIn = 24.hours)
                 } catch (e: Exception) {
-                    android.util.Log.e("PatientRepository", "Błąd createSignedUrl dla ${file.storage_path}", e)
+                    android.util.Log.e(
+                        "PatientRepository",
+                        "Błąd createSignedUrl dla ${file.storage_path}",
+                        e
+                    )
                     try {
                         bucket.publicUrl(file.storage_path)
                     } catch (_: Exception) {
@@ -137,7 +160,10 @@ class PatientRepository {
             try {
                 client.storage.from("skany-medyczne").delete(listOf(storagePath))
             } catch (e: Exception) {
-                android.util.Log.w("PatientRepository", "Plik $storagePath mógł zostać usunięty ręcznie ze storage: ${e.message}")
+                android.util.Log.w(
+                    "PatientRepository",
+                    "Plik $storagePath mógł zostać usunięty ręcznie ze storage: ${e.message}"
+                )
             }
 
             client.from("medical_files")
@@ -209,7 +235,7 @@ class PatientRepository {
         }
     }
 
-    suspend fun getAvailableDoctors(): Result<List<PatientProfileDto>> {
+    suspend fun getAvailableDoctors(): Result<List<ProfileDto>> {
         return try {
             val doctors = client.from("profiles")
                 .select {
@@ -217,7 +243,7 @@ class PatientRepository {
                         eq("role", "doctor")
                     }
                 }
-                .decodeList<PatientProfileDto>()
+                .decodeList<ProfileDto>()
             Result.success(doctors)
         } catch (e: Exception) {
             Result.failure(e)
@@ -243,7 +269,8 @@ class PatientRepository {
             val detailed = appointments.map { app ->
                 val clinic = clinics[app.clinic_id]
                 val doctor = doctors[app.doctor_id]
-                val docName = if (doctor != null) "dr ${doctor.first_name} ${doctor.last_name}" else "Lekarz prowadzący"
+                val docName =
+                    if (doctor != null) "dr ${doctor.first_name} ${doctor.last_name}" else "Lekarz prowadzący"
 
                 PatientAppointmentDetailsDto(
                     id = app.id,
@@ -295,6 +322,28 @@ class PatientRepository {
                     }
                 }
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getMyProfile(): Result<ProfileDto> {
+        return try {
+            val userId = getCurrentUserId()
+                ?: return Result.failure(IllegalStateException("Brak aktywnej sesji użytkownika."))
+            val email = client.auth.currentUserOrNull()?.email
+                ?: client.auth.currentSessionOrNull()?.user?.email
+
+            val profile = client.from("profiles")
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingleOrNull<ProfileDto>()
+                ?: return Result.failure(IllegalStateException("Nie znaleziono profilu pacjenta."))
+
+            Result.success(profile.copy(email = email))
         } catch (e: Exception) {
             Result.failure(e)
         }

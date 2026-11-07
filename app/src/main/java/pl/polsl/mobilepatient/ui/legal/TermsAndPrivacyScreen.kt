@@ -10,6 +10,7 @@ import android.webkit.WebViewClient
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.viewinterop.AndroidView
+import pl.polsl.mobilepatient.ui.theme.ThemeManager
+import pl.polsl.mobilepatient.ui.theme.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
@@ -49,6 +53,14 @@ fun TermsAndPrivacyScreen(
     var pageProgress by remember { mutableIntStateOf(0) }
     var isLoading by remember { mutableStateOf(true) }
     var textZoomLevel by remember { mutableIntStateOf(100) }
+
+    val themeMode by ThemeManager.themeMode.collectAsState()
+    val isSystemDark = isSystemInDarkTheme()
+    val isDark = when (themeMode) {
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+        ThemeMode.SYSTEM -> isSystemDark
+    }
 
     val assetUrl = "file:///android_asset/legal/regulamin_rodo.html"
 
@@ -64,7 +76,7 @@ fun TermsAndPrivacyScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Ochrona danych i zasady korzystania",
+                                text = "Polityka prywatności, prawa pacjenta i zasady przetwarzania",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -79,7 +91,6 @@ fun TermsAndPrivacyScreen(
                         }
                     },
                     actions = {
-                        // Zmniejsz czcionkę
                         IconButton(
                             onClick = {
                                 if (textZoomLevel > 80) {
@@ -93,7 +104,6 @@ fun TermsAndPrivacyScreen(
                                 contentDescription = "Zmniejsz tekst"
                             )
                         }
-                        // Zwiększ czcionkę
                         IconButton(
                             onClick = {
                                 if (textZoomLevel < 160) {
@@ -107,7 +117,6 @@ fun TermsAndPrivacyScreen(
                                 contentDescription = "Powiększ tekst"
                             )
                         }
-                        // Odśwież dokument
                         IconButton(onClick = { webViewRef?.reload() }) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
@@ -120,7 +129,6 @@ fun TermsAndPrivacyScreen(
                     )
                 )
 
-                // Wskaźnik ładowania strony WebView
                 AnimatedVisibility(
                     visible = isLoading,
                     enter = fadeIn(),
@@ -157,9 +165,20 @@ fun TermsAndPrivacyScreen(
                             loadWithOverviewMode = true
                             cacheMode = WebSettings.LOAD_DEFAULT
                             textZoom = textZoomLevel
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                isAlgorithmicDarkeningAllowed = isDark
+                            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                @Suppress("DEPRECATION")
+                                forceDark =
+                                    if (isDark) WebSettings.FORCE_DARK_ON else WebSettings.FORCE_DARK_OFF
+                            }
                         }
                         webViewClient = object : WebViewClient() {
-                            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                            override fun onPageStarted(
+                                view: WebView?,
+                                url: String?,
+                                favicon: Bitmap?
+                            ) {
                                 isLoading = true
                             }
 

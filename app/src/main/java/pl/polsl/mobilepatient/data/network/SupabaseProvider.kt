@@ -7,6 +7,9 @@ import io.github.jan.supabase.storage.Storage
 import pl.polsl.mobilepatient.BuildConfig
 
 object SupabaseProvider {
+    @Volatile
+    var cachedUserId: String? = null
+
     val client = createSupabaseClient(
         supabaseUrl = BuildConfig.SUPABASE_URL,
         supabaseKey = BuildConfig.SUPABASE_ANON_KEY

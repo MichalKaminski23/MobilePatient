@@ -5,14 +5,14 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 import pl.polsl.mobilepatient.data.dto.AppointmentWithPatientDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordInsertDto
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
 import pl.polsl.mobilepatient.data.dto.PrescriptionInsertDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 
 class DoctorDtoUnitTest {
 
     @Test
     fun testPatientProfileDtoCreation() {
-        val patient = PatientProfileDto(
+        val patient = ProfileDto(
             id = "patient-123",
             first_name = "Jan",
             last_name = "Kowalski",

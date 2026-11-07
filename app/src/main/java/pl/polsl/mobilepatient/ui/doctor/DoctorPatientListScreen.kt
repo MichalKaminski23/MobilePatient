@@ -37,16 +37,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 
 @Composable
 fun DoctorPatientListScreen(
-    patients: List<PatientProfileDto>,
+    patients: List<ProfileDto>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onSelectPatient: (patientId: String) -> Unit,
-    onOpenAddRecordDialog: (patient: PatientProfileDto) -> Unit,
-    onOpenIssuePrescriptionDialog: (patient: PatientProfileDto) -> Unit
+    onOpenAddRecordDialog: (patient: ProfileDto) -> Unit,
+    onOpenIssuePrescriptionDialog: (patient: ProfileDto) -> Unit
 ) {
     val filteredPatients = patients.filter { patient ->
         val fullName = "${patient.first_name} ${patient.last_name}"
@@ -105,7 +105,7 @@ fun DoctorPatientListScreen(
 
 @Composable
 private fun PatientCardItem(
-    patient: PatientProfileDto,
+    patient: ProfileDto,
     onCardClick: () -> Unit,
     onAddRecordClick: () -> Unit,
     onIssuePrescriptionClick: () -> Unit

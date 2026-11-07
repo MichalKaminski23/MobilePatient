@@ -7,9 +7,9 @@ import pl.polsl.mobilepatient.data.dto.AppointmentWithPatientDto
 import pl.polsl.mobilepatient.data.dto.DoctorPatientRelationDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordInsertDto
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
 import pl.polsl.mobilepatient.data.dto.PrescriptionDto
 import pl.polsl.mobilepatient.data.dto.PrescriptionInsertDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
 
 class DoctorRepository {
@@ -20,7 +20,7 @@ class DoctorRepository {
         return client.auth.currentUserOrNull()?.id
     }
 
-    suspend fun getAssignedPatients(doctorId: String): Result<List<PatientProfileDto>> {
+    suspend fun getAssignedPatients(doctorId: String): Result<List<ProfileDto>> {
         return try {
             val relations = client.from("doctor_patients")
                 .select {
@@ -41,7 +41,7 @@ class DoctorRepository {
                         isIn("id", patientIds)
                     }
                 }
-                .decodeList<PatientProfileDto>()
+                .decodeList<ProfileDto>()
 
             Result.success(patients)
         } catch (e: Exception) {
@@ -49,7 +49,7 @@ class DoctorRepository {
         }
     }
 
-    suspend fun getPatientDetails(patientId: String): Result<PatientProfileDto> {
+    suspend fun getPatientDetails(patientId: String): Result<ProfileDto> {
         return try {
             val profile = client.from("profiles")
                 .select {
@@ -57,7 +57,7 @@ class DoctorRepository {
                         eq("id", patientId)
                     }
                 }
-                .decodeSingleOrNull<PatientProfileDto>()
+                .decodeSingleOrNull<ProfileDto>()
                 ?: return Result.failure(IllegalStateException("Nie znaleziono profilu pacjenta."))
 
             Result.success(profile)
@@ -132,7 +132,7 @@ class DoctorRepository {
                         isIn("id", patientIds)
                     }
                 }
-                .decodeList<PatientProfileDto>()
+                .decodeList<ProfileDto>()
                 .associateBy { it.id }
 
             val resultList = appointments.map { appt ->

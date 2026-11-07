@@ -114,7 +114,7 @@ zaimplementowano i przetestowano dwa scenariusze testowe:
 ### 5.1. Test Odmowy i Odwołania Uprawnienia Aparatu (`CAMERA`)
 
 1. **Uruchomienie:** Zaloguj się do aplikacji i przejdź do widoku `Panel Pacjenta`
-   (`MainDashboardScreen`).
+   (`PatientDashboardScreen`).
 2. **Scenariusz A (Odmowa w oknie dialogowym):**
     * Kliknij przycisk **„Aparat”**.
     * W systemowym oknie uprawnień wybierz opcję **„Nie zezwalaj”** (*Deny*).
