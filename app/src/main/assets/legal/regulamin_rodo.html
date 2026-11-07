@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Regulamin i Polityka Prywatności RODO – Mobilny Pacjent</title>
+    <style>
+        :root {
+            --primary: #1565C0;
+            --primary-container: #E3F2FD;
+            --on-primary-container: #0D47A1;
+            --surface: #FFFFFF;
+            --background: #F8F9FA;
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+            --border: #E5E7EB;
+            --success: #10B981;
+            --badge-bg: #EEF2FF;
+            --badge-text: #3730A3;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #90CAF9;
+                --primary-container: #1E3A5F;
+                --on-primary-container: #E3F2FD;
+                --surface: #1E1E1E;
+                --background: #121212;
+                --text-primary: #F3F4F6;
+                --text-secondary: #9CA3AF;
+                --border: #2D3748;
+                --badge-bg: #283593;
+                --badge-text: #E8EAF6;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 16px;
+            line-height: 1.6;
+        }
+
+        .header-card {
+            background-color: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 22px;
+            color: var(--primary);
+            margin: 8px 0;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .section-card {
+            background-color: var(--surface);
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        h2 {
+            font-size: 17px;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h3 {
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+
+        p, li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0 0 10px 0;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin: 0 0 10px 0;
+        }
+
+        .callout {
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            border-left: 4px solid var(--primary);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        .callout p {
+            color: var(--on-primary-container);
+            margin: 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-card">
+        <span class="badge">Dokumentacja Prawna</span>
+        <h1>Regulamin Aplikacji & Polityka Prywatności RODO</h1>
+        <p class="subtitle">System Informacji Medycznej „Mobilny Pacjent” – Politechnika Śląska</p>
+    </div>
+
+    <!-- SEKCJA 1: REGULAMIN -->
+    <div class="section-card">
+        <h2>§ 1. Postanowienia Ogólne i Warunki Korzystania</h2>
+        <p>1. Niniejszy Regulamin określa zasady korzystania z mobilnej aplikacji medycznej <strong>Mobilny Pacjent</strong>, przeznaczonej dla pacjentów oraz lekarzy w celu obsługi dokumentacji zdrowotnej, e-recept oraz rezerwacji wizyt.</p>
+        <p>2. Usługodawcą i Administratorem Systemu jest <strong>Centrum Medyczne Politechniki Śląskiej</strong> z siedzibą przy ul. Akademickiej 16, 44-100 Gliwice.</p>
+        <p>3. Dostęp do funkcjonalności aplikacji wymaga zarejestrowania konta i pomyślnego uwierzytelnienia za pośrednictwem bezpiecznego protokołu Supabase Auth z opcją weryfikacji biometrycznej (Android BiometricPrompt).</p>
+    </div>
+
+    <div class="section-card">
+        <h2>§ 2. Zakres Świadczonych Usług Medycznych</h2>
+        <p>W ramach aplikacji pacjent uzyskuje dostęp do następujących usług cyfrowych:</p>
+        <ul>
+            <li><strong>Wgląd w Elektroniczną Dokumentację Medyczną:</strong> przeglądanie historii wizyt, zaleceń lekarskich, diagnoz oraz skierowań.</li>
+            <li><strong>Obsługa E-recept:</strong> podgląd aktywnych e-recept z 4-cyfrowym kodem odbioru, wykazem dawek leków i możliwością symulacji odbioru w aptece.</li>
+            <li><strong>Magazyn Badań i Skanów (Storage):</strong> bezpieczne wgrywanie wyników badań laboratoryjnych i obrazowych za pomocą aparatu lub Photo Pickera z szyfrowanym przesyłem.</li>
+            <li><strong>Harmonogram i Rejestracja Wizyt:</strong> rezerwacja konsultacji u lekarzy specjalistów oraz wyszukiwanie placówek medycznych.</li>
+        </ul>
+    </div>
+
+    <!-- SEKCJA 2: RODO -->
+    <div class="section-card">
+        <h2>§ 3. Klauzula Informacyjna RODO (Ochrona Danych Osobowych)</h2>
+        <div class="callout">
+            <p><strong>Zgodność z RODO:</strong> Przetwarzanie danych o zdrowiu odbywa się w oparciu o Art. 6 ust. 1 lit. c oraz Art. 9 ust. 2 lit. h Ogólnego Rozporządzenia o Ochronie Danych (RODO) w celach profilaktyki zdrowotnej, diagnozy medycznej i leczenia.</p>
+        </div>
+
+        <h3>1. Administrator Danych Osobowych (ADO)</h3>
+        <p>Administratorem danych jest Centrum Medyczne Politechniki Śląskiej, ul. Akademicka 16, 44-100 Gliwice. Kontakt z Inspektorem Ochrony Danych (IOD): <em>iod.med@polsl.pl</em>.</p>
+
+        <h3>2. Kategorie Przetwarzanych Danych</h3>
+        <ul>
+            <li><strong>Dane identyfikacyjne:</strong> Imię, nazwisko, PESEL, adres zamieszkania, numer telefonu, adres e-mail.</li>
+            <li><strong>Szczególne kategorie danych (dane o zdrowiu):</strong> Rozpoznania, historia leczenia, wyniki badań, skany dokumentacji medycznej, wystawione recepty.</li>
+        </ul>
+
+        <h3>3. Bezpieczeństwo i Przechowywanie Danych</h3>
+        <p>Wszystkie dane medyczne są zabezpieczone wielowarstwowo:</p>
+        <ul>
+            <li><strong>Izolacja Uprawnień (Row Level Security - RLS):</strong> Reguły bazodanowe PostgreSQL w Supabase gwarantują, że pacjent ma dostęp wyłącznie do swoich własnych wpisów.</li>
+            <li><strong>Szyfrowanie Transmisji:</strong> Cała komunikacja z serwerem odbywa się z wymuszeniem szyfrowania TLS 1.3 (HTTPS/WSS).</li>
+            <li><strong>Bezpieczny Magazyn Lokalny:</strong> Tokeny sesji i klucze szyfrowane są przy użyciu sprzętowego modułu <em>Android Keystore</em> oraz <em>EncryptedSharedPreferences</em>.</li>
+        </ul>
+    </div>
+
+    <div class="section-card">
+        <h2>§ 4. Prawa Pacjenta Zgodnie z RODO</h2>
+        <p>Każdej osobie, której dane dotyczą, przysługują następujące uprawnienia:</p>
+        <ul>
+            <li><strong>Prawo dostępu do danych (Art. 15 RODO):</strong> Możliwość bieżącego wglądu we wszystkie zgromadzone wpisy medyczne bezpośrednio w aplikacji.</li>
+            <li><strong>Prawo do sprostowania (Art. 16 RODO):</strong> Aktualizacja błędnych danych kontaktowych lub osobowych.</li>
+            <li><strong>Prawo do ograniczenia przetwarzania (Art. 18 RODO) oraz przenoszenia danych (Art. 20 RODO).</strong></li>
+            <li><strong>Prawo wniesienia skargi:</strong> Przysługuje prawo wniesienia skargi do organu nadzorczego – Prezesa Urzędu Ochrony Danych Osobowych (PUODO), ul. Stawki 2, 00-193 Warszawa.</li>
+        </ul>
+    </div>
+
+    <div class="section-card">
+        <h2>§ 5. Zgoda na Użycie Komponentów Sprzętowych</h2>
+        <p>Aplikacja wymaga dostępu do wybranych funkcji urządzenia wyłącznie po wyrażeniu przez użytkownika świadomej zgody (runtime permission):</p>
+        <ul>
+            <li><strong>Aparat fotograficzny (CAMERA):</strong> Wyłącznie w celu doraźnego wykonania zdjęcia dokumentacji medycznej do wysyłki do bezpiecznego magazynu. Zdjęcia nie są udostępniane podmiotom trzecim.</li>
+            <li><strong>Powiadomienia (POST_NOTIFICATIONS):</strong> Informowanie o terminach zaplanowanych wizyt oraz statusie wystawionych recept.</li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        <p>Wersja 1.0.4 | Ostatnia aktualizacja: Listopad 2026 r.<br>
+        Wydział Automatyki, Elektroniki i Informatyki – Politechnika Śląska</p>
+    </div>
+
+</body>
+</html>

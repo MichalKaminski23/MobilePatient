@@ -42,12 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoctorPatientDetailScreen(
-    patient: PatientProfileDto,
+    patient: ProfileDto,
     records: List<MedicalRecordDto>,
     onBack: () -> Unit,
     onAddRecordClick: () -> Unit,

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,7 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 import pl.polsl.mobilepatient.ui.components.IconBadge
 import pl.polsl.mobilepatient.ui.doctor.components.AddMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.IssuePrescriptionDialog
@@ -68,8 +67,8 @@ fun DoctorDashboardScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showSettingsScreen by remember { mutableStateOf(false) }
 
-    var patientForAddRecord by remember { mutableStateOf<PatientProfileDto?>(null) }
-    var patientForIssuePrescription by remember { mutableStateOf<PatientProfileDto?>(null) }
+    var patientForAddRecord by remember { mutableStateOf<ProfileDto?>(null) }
+    var patientForIssuePrescription by remember { mutableStateOf<ProfileDto?>(null) }
 
     LaunchedEffect(initialTargetPatientId) {
         if (initialTargetPatientId != null) {
@@ -102,6 +101,7 @@ fun DoctorDashboardScreen(
                 CircularProgressIndicator()
             }
         }
+
         is DoctorUiState.Error -> {
             Box(
                 modifier = Modifier
@@ -116,6 +116,7 @@ fun DoctorDashboardScreen(
                 )
             }
         }
+
         is DoctorUiState.Success -> {
             if (state.selectedPatient != null) {
                 DoctorPatientDetailScreen(
@@ -123,7 +124,9 @@ fun DoctorDashboardScreen(
                     records = state.medicalRecords,
                     onBack = { viewModel.clearSelectedPatient() },
                     onAddRecordClick = { patientForAddRecord = state.selectedPatient },
-                    onIssuePrescriptionClick = { patientForIssuePrescription = state.selectedPatient }
+                    onIssuePrescriptionClick = {
+                        patientForIssuePrescription = state.selectedPatient
+                    }
                 )
             } else {
                 Scaffold(
@@ -142,13 +145,23 @@ fun DoctorDashboardScreen(
                             NavigationBarItem(
                                 selected = selectedTab == 0,
                                 onClick = { selectedTab = 0 },
-                                icon = { Icon(Icons.Default.People, contentDescription = "Pacjenci") },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.People,
+                                        contentDescription = "Pacjenci"
+                                    )
+                                },
                                 label = { Text("Moi Pacjenci") }
                             )
                             NavigationBarItem(
                                 selected = selectedTab == 1,
                                 onClick = { selectedTab = 1 },
-                                icon = { Icon(Icons.Default.CalendarMonth, contentDescription = "Terminarz") },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.CalendarMonth,
+                                        contentDescription = "Terminarz"
+                                    )
+                                },
                                 label = { Text("Terminarz") }
                             )
                         }
@@ -180,8 +193,11 @@ fun DoctorDashboardScreen(
                                     onSearchQueryChange = { viewModel.updateSearchQuery(it) },
                                     onSelectPatient = { viewModel.selectPatient(it) },
                                     onOpenAddRecordDialog = { patientForAddRecord = it },
-                                    onOpenIssuePrescriptionDialog = { patientForIssuePrescription = it }
+                                    onOpenIssuePrescriptionDialog = {
+                                        patientForIssuePrescription = it
+                                    }
                                 )
+
                                 1 -> DoctorAppointmentsScreen(
                                     appointments = state.appointments,
                                     onUpdateStatus = { apptId, newStatus ->

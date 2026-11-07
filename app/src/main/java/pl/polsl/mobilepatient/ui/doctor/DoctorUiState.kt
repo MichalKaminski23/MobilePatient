@@ -2,16 +2,16 @@ package pl.polsl.mobilepatient.ui.doctor
 
 import pl.polsl.mobilepatient.data.dto.AppointmentWithPatientDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
-import pl.polsl.mobilepatient.data.dto.PatientProfileDto
+import pl.polsl.mobilepatient.data.dto.ProfileDto
 
 sealed interface DoctorUiState {
     data object Loading : DoctorUiState
 
     data class Success(
         val doctorId: String,
-        val patients: List<PatientProfileDto>,
+        val patients: List<ProfileDto>,
         val appointments: List<AppointmentWithPatientDto>,
-        val selectedPatient: PatientProfileDto? = null,
+        val selectedPatient: ProfileDto? = null,
         val medicalRecords: List<MedicalRecordDto> = emptyList(),
         val searchQuery: String = "",
         val isAddingRecordLoading: Boolean = false,

@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.auth
+package pl.polsl.mobilepatient.ui.auth.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

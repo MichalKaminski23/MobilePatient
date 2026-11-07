@@ -3,7 +3,7 @@ package pl.polsl.mobilepatient.data.repository
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
-import pl.polsl.mobilepatient.data.dto.UserProfileDto
+import pl.polsl.mobilepatient.data.dto.ShortProfileDto
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
 
 class AuthRepository {
@@ -13,7 +13,7 @@ class AuthRepository {
     suspend fun signIn(
         email: String,
         password: String
-    ): Result<UserProfileDto> {
+    ): Result<ShortProfileDto> {
         return try {
             client.auth.signInWith(Email) {
                 this.email = email.trim()
@@ -21,11 +21,14 @@ class AuthRepository {
             }
 
             val userId = client.auth.currentUserOrNull()?.id
+                ?: client.auth.currentSessionOrNull()?.user?.id
                 ?: return Result.failure(
                     IllegalStateException(
                         "Nie udało się pobrać identyfikatora użytkownika."
                     )
                 )
+
+            SupabaseProvider.cachedUserId = userId
 
             val profile = client
                 .from("profiles")
@@ -34,7 +37,7 @@ class AuthRepository {
                         eq("id", userId)
                     }
                 }
-                .decodeSingleOrNull<UserProfileDto>()
+                .decodeSingleOrNull<ShortProfileDto>()
                 ?: return Result.failure(
                     IllegalStateException(
                         "Nie znaleziono profilu użytkownika."
@@ -57,6 +60,7 @@ class AuthRepository {
     }
 
     suspend fun signOut() {
+        SupabaseProvider.cachedUserId = null
         client.auth.signOut()
     }
 }

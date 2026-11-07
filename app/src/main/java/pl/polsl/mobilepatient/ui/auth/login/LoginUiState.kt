@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.auth
+package pl.polsl.mobilepatient.ui.auth.login
 
 sealed interface LoginUiState {
     data object Idle : LoginUiState

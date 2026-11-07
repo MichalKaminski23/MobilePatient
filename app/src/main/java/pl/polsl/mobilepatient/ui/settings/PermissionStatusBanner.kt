@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.components
+package pl.polsl.mobilepatient.ui.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

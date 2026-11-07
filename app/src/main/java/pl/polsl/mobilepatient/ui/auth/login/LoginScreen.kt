@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.auth
+package pl.polsl.mobilepatient.ui.auth.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -134,7 +134,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     OutlinedTextField(
-                        value = email, // email = "pacjent@test.pl", // lub "lekarz@test.pl" lub email
+                        value = email,
                         onValueChange = { email = it },
                         label = { Text("Adres e-mail") },
                         leadingIcon = {
@@ -153,7 +153,7 @@ fun LoginScreen(
                     )
 
                     OutlinedTextField(
-                        value = password, //lub password,
+                        value = password,
                         onValueChange = { password = it },
                         label = { Text("Hasło") },
                         leadingIcon = {
