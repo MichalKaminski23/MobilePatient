@@ -26,9 +26,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
@@ -56,7 +60,24 @@ import androidx.compose.ui.unit.dp
 import pl.polsl.mobilepatient.ui.components.DashboardModuleCard
 import pl.polsl.mobilepatient.ui.components.DashboardModuleItem
 import pl.polsl.mobilepatient.ui.components.IconBadge
+import pl.polsl.mobilepatient.ui.legal.TermsAndPrivacyScreen
+import pl.polsl.mobilepatient.ui.patient.PatientPrescriptionsScreen
+import pl.polsl.mobilepatient.ui.patient.PatientRecordsScreen
+import pl.polsl.mobilepatient.ui.patient.PatientScansScreen
+import pl.polsl.mobilepatient.ui.patient.PatientVisitsScreen
+import pl.polsl.mobilepatient.ui.patient.map.ClinicsMapScreen
 import pl.polsl.mobilepatient.ui.settings.SettingsScreen
+
+enum class PatientDestination {
+    OVERVIEW,
+    DOCUMENTS,
+    PRESCRIPTIONS,
+    SCANS,
+    VISITS,
+    MAP,
+    TERMS,
+    SETTINGS
+}
 
 @Composable
 fun MainDashboardScreen(
@@ -64,16 +85,16 @@ fun MainDashboardScreen(
     userName: String,
     onLogout: () -> Unit
 ) {
-    var showSettings by remember { mutableStateOf(false) }
+    var currentDestination by remember { mutableStateOf(PatientDestination.OVERVIEW) }
 
-    BackHandler(enabled = showSettings) {
-        showSettings = false
+    BackHandler(enabled = currentDestination != PatientDestination.OVERVIEW) {
+        currentDestination = PatientDestination.OVERVIEW
     }
 
     AnimatedContent(
-        targetState = showSettings,
+        targetState = currentDestination,
         transitionSpec = {
-            if (targetState) {
+            if (targetState != PatientDestination.OVERVIEW) {
                 slideInHorizontally(initialOffsetX = { it }) + fadeIn() togetherWith
                         slideOutHorizontally(targetOffsetX = { -it / 3 }) + fadeOut()
             } else {
@@ -82,16 +103,43 @@ fun MainDashboardScreen(
             }
         },
         label = "DashboardTransition"
-    ) { isSettings ->
-        if (isSettings) {
-            SettingsScreen(onBack = { showSettings = false })
-        } else {
-            DashboardOverview(
-                role = role,
-                userName = userName,
-                onOpenSettings = { showSettings = true },
-                onLogout = onLogout
-            )
+    ) { destination ->
+        when (destination) {
+            PatientDestination.OVERVIEW -> {
+                DashboardOverview(
+                    role = role,
+                    userName = userName,
+                    onOpenDocuments = { currentDestination = PatientDestination.DOCUMENTS },
+                    onOpenPrescriptions = { currentDestination = PatientDestination.PRESCRIPTIONS },
+                    onOpenScans = { currentDestination = PatientDestination.SCANS },
+                    onOpenVisits = { currentDestination = PatientDestination.VISITS },
+                    onOpenMap = { currentDestination = PatientDestination.MAP },
+                    onOpenTerms = { currentDestination = PatientDestination.TERMS },
+                    onOpenSettings = { currentDestination = PatientDestination.SETTINGS },
+                    onLogout = onLogout
+                )
+            }
+            PatientDestination.DOCUMENTS -> {
+                PatientRecordsScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
+            PatientDestination.PRESCRIPTIONS -> {
+                PatientPrescriptionsScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
+            PatientDestination.SCANS -> {
+                PatientScansScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
+            PatientDestination.VISITS -> {
+                PatientVisitsScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
+            PatientDestination.MAP -> {
+                ClinicsMapScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
+            PatientDestination.TERMS -> {
+                TermsAndPrivacyScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
+            PatientDestination.SETTINGS -> {
+                SettingsScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+            }
         }
     }
 }
@@ -101,6 +149,12 @@ fun MainDashboardScreen(
 private fun DashboardOverview(
     role: String,
     userName: String,
+    onOpenDocuments: () -> Unit,
+    onOpenPrescriptions: () -> Unit,
+    onOpenScans: () -> Unit,
+    onOpenVisits: () -> Unit,
+    onOpenMap: () -> Unit,
+    onOpenTerms: () -> Unit,
     onOpenSettings: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -108,10 +162,29 @@ private fun DashboardOverview(
         DashboardModuleItem(
             id = "documents",
             title = "Moja dokumentacja",
-            subtitle = "Wyniki badań, e-recepty i skany dokumentacji",
+            subtitle = "Historia leczenia, diagnozy i skierowania",
             icon = Icons.Default.Description,
             iconTint = MaterialTheme.colorScheme.primary,
-            iconContainerColor = MaterialTheme.colorScheme.primaryContainer
+            iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            onClick = onOpenDocuments
+        ),
+        DashboardModuleItem(
+            id = "prescriptions",
+            title = "Moje e-recepty",
+            subtitle = "Kody odbioru, wykaz leków i dawkowanie",
+            icon = Icons.Default.Medication,
+            iconTint = MaterialTheme.colorScheme.primary,
+            iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            onClick = onOpenPrescriptions
+        ),
+        DashboardModuleItem(
+            id = "scans",
+            title = "Skany i badania (Storage)",
+            subtitle = "Wgrywanie aparatem, Photo Picker i podgląd",
+            icon = Icons.Default.CloudUpload,
+            iconTint = MaterialTheme.colorScheme.tertiary,
+            iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            onClick = onOpenScans
         ),
         DashboardModuleItem(
             id = "visits",
@@ -119,7 +192,26 @@ private fun DashboardOverview(
             subtitle = "Harmonogram wizyt i lista przychodni",
             icon = Icons.Default.Event,
             iconTint = MaterialTheme.colorScheme.secondary,
-            iconContainerColor = MaterialTheme.colorScheme.secondaryContainer
+            iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            onClick = onOpenVisits
+        ),
+        DashboardModuleItem(
+            id = "map",
+            title = "Placówki i mapa",
+            subtitle = "Lokalizacje przychodni, kontakt i nawigacja",
+            icon = Icons.Default.Map,
+            iconTint = MaterialTheme.colorScheme.primary,
+            iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            onClick = onOpenMap
+        ),
+        DashboardModuleItem(
+            id = "terms",
+            title = "Regulamin i RODO (WebView)",
+            subtitle = "Polityka prywatności, prawa pacjenta i zasady przetwarzania",
+            icon = Icons.Default.Policy,
+            iconTint = MaterialTheme.colorScheme.secondary,
+            iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            onClick = onOpenTerms
         ),
         DashboardModuleItem(
             id = "settings",

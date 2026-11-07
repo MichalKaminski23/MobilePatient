@@ -3,6 +3,7 @@ package pl.polsl.mobilepatient.data.network
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
 import pl.polsl.mobilepatient.BuildConfig
 
 object SupabaseProvider {
@@ -13,5 +14,6 @@ object SupabaseProvider {
 
         install(Auth)
         install(Postgrest)
+        install(Storage)
     }
 }
