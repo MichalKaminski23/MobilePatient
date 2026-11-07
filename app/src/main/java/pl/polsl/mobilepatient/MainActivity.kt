@@ -4,11 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import pl.polsl.mobilepatient.data.network.SupabaseProvider
 import pl.polsl.mobilepatient.ui.theme.ThemeManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SupabaseProvider.init(applicationContext)
         ThemeManager.init(applicationContext)
         val deepLinkPatientId = extractPatientIdFromIntent(intent)
         setContent {
