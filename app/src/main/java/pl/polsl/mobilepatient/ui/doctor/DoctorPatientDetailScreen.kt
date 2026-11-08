@@ -20,7 +20,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -42,16 +45,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
+import pl.polsl.mobilepatient.data.dto.PrescriptionDto
 import pl.polsl.mobilepatient.data.dto.ProfileDto
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoctorPatientDetailScreen(
     patient: ProfileDto,
     records: List<MedicalRecordDto>,
+    prescriptions: List<PrescriptionDto>,
     onBack: () -> Unit,
     onAddRecordClick: () -> Unit,
-    onIssuePrescriptionClick: () -> Unit
+    onIssuePrescriptionClick: () -> Unit,
+    onAddAppointmentClick: () -> Unit,
+    onEditRecordClick: (record: MedicalRecordDto) -> Unit,
+    onDeleteRecordClick: (recordId: String) -> Unit
 ) {
     BackHandler(onBack = onBack)
 
@@ -68,7 +77,7 @@ fun DoctorPatientDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Cofnij"
                         )
                     }
@@ -157,37 +166,89 @@ fun DoctorPatientDetailScreen(
                             Button(
                                 onClick = onAddRecordClick,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(10.dp)
                             ) {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Dodaj wpis", fontWeight = FontWeight.SemiBold)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Wpis", style = MaterialTheme.typography.labelMedium)
                             }
 
                             OutlinedButton(
                                 onClick = onIssuePrescriptionClick,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(10.dp)
                             ) {
                                 Icon(
                                     Icons.Default.Medication,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("E-recepta", fontWeight = FontWeight.SemiBold)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Recepta", style = MaterialTheme.typography.labelMedium)
+                            }
+
+                            OutlinedButton(
+                                onClick = onAddAppointmentClick,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.CalendarMonth,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Wizyta", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
                 }
             }
 
+            // Nagłówek e-recept pacjenta
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Medication,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Wystawione e-recepty",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+
+            if (prescriptions.isEmpty()) {
+                item {
+                    Text(
+                        text = "Brak aktywnych e-recept dla tego pacjenta.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+            } else {
+                items(prescriptions, key = { it.id }) { prescription ->
+                    PrescriptionCardItem(prescription = prescription)
+                }
+            }
+
             // Nagłówek dokumentacji
             item {
+                Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -225,7 +286,11 @@ fun DoctorPatientDetailScreen(
                 }
             } else {
                 items(records, key = { it.id }) { record ->
-                    MedicalRecordCard(record = record)
+                    MedicalRecordCard(
+                        record = record,
+                        onEditClick = { onEditRecordClick(record) },
+                        onDeleteClick = { onDeleteRecordClick(record.id) }
+                    )
                 }
             }
         }
@@ -233,13 +298,69 @@ fun DoctorPatientDetailScreen(
 }
 
 @Composable
-private fun MedicalRecordCard(record: MedicalRecordDto) {
+private fun PrescriptionCardItem(prescription: PrescriptionDto) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Kod odbioru: ${prescription.code}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Text(
+                        text = prescription.status.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = prescription.medications,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Ważna do: ${prescription.valid_until}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun MedicalRecordCard(
+    record: MedicalRecordDto,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     val (typeTitle, badgeColor) = when (record.record_type) {
         "visit" -> "Wizyta lekarska" to MaterialTheme.colorScheme.primaryContainer
         "test_result" -> "Wynik badania" to MaterialTheme.colorScheme.secondaryContainer
         "referral" -> "Skierowanie" to MaterialTheme.colorScheme.tertiaryContainer
         else -> "Wpis medyczny" to MaterialTheme.colorScheme.surfaceVariant
     }
+
+    val canModify = isWithinOneDay(record.created_at)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -267,11 +388,23 @@ private fun MedicalRecordCard(record: MedicalRecordDto) {
                     )
                 }
 
-                Text(
-                    text = record.created_at?.take(10) ?: "",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = record.created_at?.take(10) ?: "",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (canModify) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(onClick = onEditClick, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edytuj", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        }
+                        IconButton(onClick = onDeleteClick, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.Delete, contentDescription = "Usuń", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -282,5 +415,17 @@ private fun MedicalRecordCard(record: MedicalRecordDto) {
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+}
+
+private fun isWithinOneDay(timestamp: String?): Boolean {
+    if (timestamp == null) return true
+    return try {
+        val cleaned = timestamp.replace(" ", "T").take(19)
+        val recordTime = LocalDateTime.parse(cleaned)
+        val oneDayAgo = LocalDateTime.now().minusDays(1)
+        recordTime.isAfter(oneDayAgo)
+    } catch (_: Exception) {
+        true
     }
 }

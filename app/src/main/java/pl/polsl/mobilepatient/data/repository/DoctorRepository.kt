@@ -1,9 +1,12 @@
 package pl.polsl.mobilepatient.data.repository
 
+import android.util.Log
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import pl.polsl.mobilepatient.data.dto.AppointmentDto
+import pl.polsl.mobilepatient.data.dto.AppointmentInsertDto
 import pl.polsl.mobilepatient.data.dto.AppointmentWithPatientDto
+import pl.polsl.mobilepatient.data.dto.ClinicDto
 import pl.polsl.mobilepatient.data.dto.DoctorPatientRelationDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordInsertDto
@@ -45,6 +48,55 @@ class DoctorRepository {
 
             Result.success(patients)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getAssignedPatients: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getAllPatients(): Result<List<ProfileDto>> {
+        return try {
+            val patients = client.from("profiles")
+                .select {
+                    filter {
+                        eq("role", "patient")
+                    }
+                }
+                .decodeList<ProfileDto>()
+            Result.success(patients)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getAllPatients: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun assignPatient(doctorId: String, patientId: String): Result<Unit> {
+        return try {
+            client.from("doctor_patients")
+                .insert(
+                    mapOf(
+                        "doctor_id" to doctorId,
+                        "patient_id" to patientId
+                    )
+                )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd assignPatient: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun removeAssignedPatient(doctorId: String, patientId: String): Result<Unit> {
+        return try {
+            client.from("doctor_patients")
+                .delete {
+                    filter {
+                        eq("doctor_id", doctorId)
+                        eq("patient_id", patientId)
+                    }
+                }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd removeAssignedPatient: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -62,6 +114,7 @@ class DoctorRepository {
 
             Result.success(profile)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getPatientDetails: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -79,6 +132,69 @@ class DoctorRepository {
             val sorted = records.sortedByDescending { it.created_at ?: "" }
             Result.success(sorted)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getMedicalRecords: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateMedicalRecord(recordId: String, description: String): Result<Unit> {
+        return try {
+            client.from("medical_records")
+                .update(
+                    mapOf("description" to description)
+                ) {
+                    filter {
+                        eq("id", recordId)
+                    }
+                }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd updateMedicalRecord: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteMedicalRecord(recordId: String): Result<Unit> {
+        return try {
+            client.from("medical_records")
+                .delete {
+                    filter {
+                        eq("id", recordId)
+                    }
+                }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd deleteMedicalRecord: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getPrescriptionsForPatient(patientId: String): Result<List<PrescriptionDto>> {
+        return try {
+            val prescriptions = client.from("prescriptions")
+                .select {
+                    filter {
+                        eq("patient_id", patientId)
+                    }
+                }
+                .decodeList<PrescriptionDto>()
+
+            val sorted = prescriptions.sortedByDescending { it.issued_at ?: "" }
+            Result.success(sorted)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getPrescriptionsForPatient: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getClinics(): Result<List<ClinicDto>> {
+        return try {
+            val clinics = client.from("clinics")
+                .select()
+                .decodeList<ClinicDto>()
+            Result.success(clinics)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getClinics: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -93,6 +209,7 @@ class DoctorRepository {
 
             Result.success(newRecord)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd addMedicalRecord: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -107,6 +224,21 @@ class DoctorRepository {
 
             Result.success(created)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd createPrescription: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createAppointment(appointment: AppointmentInsertDto): Result<AppointmentDto> {
+        return try {
+            val created = client.from("appointments")
+                .insert(appointment) {
+                    select()
+                }
+                .decodeSingle<AppointmentDto>()
+            Result.success(created)
+        } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd createAppointment: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -157,6 +289,7 @@ class DoctorRepository {
 
             Result.success(resultList)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd getAppointmentsForDoctor: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -173,6 +306,7 @@ class DoctorRepository {
                 }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd updateAppointmentStatus: ${e.message}", e)
             Result.failure(e)
         }
     }

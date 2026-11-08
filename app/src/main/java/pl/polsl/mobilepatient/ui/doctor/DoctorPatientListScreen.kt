@@ -19,15 +19,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -46,7 +48,9 @@ fun DoctorPatientListScreen(
     onSearchQueryChange: (String) -> Unit,
     onSelectPatient: (patientId: String) -> Unit,
     onOpenAddRecordDialog: (patient: ProfileDto) -> Unit,
-    onOpenIssuePrescriptionDialog: (patient: ProfileDto) -> Unit
+    onOpenIssuePrescriptionDialog: (patient: ProfileDto) -> Unit,
+    onOpenAddPatientDialog: () -> Unit,
+    onRemovePatient: (patientId: String) -> Unit
 ) {
     val filteredPatients = patients.filter { patient ->
         val fullName = "${patient.first_name} ${patient.last_name}"
@@ -60,17 +64,33 @@ fun DoctorPatientListScreen(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = onSearchQueryChange,
-            label = { Text("Szukaj pacjenta (Imię, Nazwisko, PESEL)") },
-            leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = "Szukaj")
-            },
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                label = { Text("Szukaj pacjenta (Imię, Nazwisko, PESEL)") },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = "Szukaj")
+                },
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+
+            Button(
+                onClick = onOpenAddPatientDialog,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.height(56.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Dodaj")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Dodaj", fontWeight = FontWeight.SemiBold)
+            }
+        }
 
         if (filteredPatients.isEmpty()) {
             Box(
@@ -80,7 +100,7 @@ fun DoctorPatientListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (searchQuery.isBlank()) "Brak przypisanych pacjentów w systemie." else "Nie znaleziono pacjenta pasującego do wyszukiwania.",
+                    text = if (searchQuery.isBlank()) "Brak przypisanych pacjentów w systemie. Kliknij 'Dodaj', aby przypisać pacjenta." else "Nie znaleziono pacjenta pasującego do wyszukiwania.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -95,7 +115,8 @@ fun DoctorPatientListScreen(
                         patient = patient,
                         onCardClick = { onSelectPatient(patient.id) },
                         onAddRecordClick = { onOpenAddRecordDialog(patient) },
-                        onIssuePrescriptionClick = { onOpenIssuePrescriptionDialog(patient) }
+                        onIssuePrescriptionClick = { onOpenIssuePrescriptionDialog(patient) },
+                        onRemoveClick = { onRemovePatient(patient.id) }
                     )
                 }
             }
@@ -108,7 +129,8 @@ private fun PatientCardItem(
     patient: ProfileDto,
     onCardClick: () -> Unit,
     onAddRecordClick: () -> Unit,
-    onIssuePrescriptionClick: () -> Unit
+    onIssuePrescriptionClick: () -> Unit,
+    onRemoveClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -159,11 +181,13 @@ private fun PatientCardItem(
                     )
                 }
 
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Szczegóły",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                IconButton(onClick = onRemoveClick) {
+                    Icon(
+                        imageVector = Icons.Default.PersonRemove,
+                        contentDescription = "Usuń pacjenta",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -183,7 +207,7 @@ private fun PatientCardItem(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Karta pacjenta", style = MaterialTheme.typography.labelMedium)
+                    Text("Karta", style = MaterialTheme.typography.labelMedium)
                 }
 
                 OutlinedButton(

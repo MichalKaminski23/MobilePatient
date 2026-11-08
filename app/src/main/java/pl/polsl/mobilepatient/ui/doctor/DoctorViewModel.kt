@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pl.polsl.mobilepatient.data.dto.AppointmentInsertDto
+import pl.polsl.mobilepatient.data.dto.MedicalRecordDto
 import pl.polsl.mobilepatient.data.dto.MedicalRecordInsertDto
 import pl.polsl.mobilepatient.data.dto.PrescriptionInsertDto
 import pl.polsl.mobilepatient.data.repository.DoctorRepository
@@ -61,14 +63,17 @@ class DoctorViewModel(
             val current = _uiState.value as? DoctorUiState.Success ?: return@launch
             val patientResult = repository.getPatientDetails(patientId)
             val recordsResult = repository.getMedicalRecords(patientId)
+            val prescriptionsResult = repository.getPrescriptionsForPatient(patientId)
 
             val patient = patientResult.getOrNull()
             val records = recordsResult.getOrDefault(emptyList())
+            val prescriptions = prescriptionsResult.getOrDefault(emptyList())
 
             if (patient != null) {
                 _uiState.value = current.copy(
                     selectedPatient = patient,
-                    medicalRecords = records
+                    medicalRecords = records,
+                    prescriptions = prescriptions
                 )
             } else {
                 _uiState.value = current.copy(
@@ -82,8 +87,164 @@ class DoctorViewModel(
         val current = _uiState.value as? DoctorUiState.Success ?: return
         _uiState.value = current.copy(
             selectedPatient = null,
-            medicalRecords = emptyList()
+            medicalRecords = emptyList(),
+            prescriptions = emptyList()
         )
+    }
+
+    fun openAddPatientDialog() {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val allPatientsResult = repository.getAllPatients()
+            val allPatients = allPatientsResult.getOrDefault(emptyList())
+
+            val assignedIds = current.patients.map { it.id }.toSet()
+            val available = allPatients.filter { it.id !in assignedIds }
+
+            _uiState.value = current.copy(
+                availablePatients = available,
+                showAddPatientDialog = true
+            )
+        }
+    }
+
+    fun closeAddPatientDialog() {
+        val current = _uiState.value as? DoctorUiState.Success ?: return
+        _uiState.value = current.copy(showAddPatientDialog = false)
+    }
+
+    fun assignPatient(patientId: String) {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val result = repository.assignPatient(current.doctorId, patientId)
+            if (result.isSuccess) {
+                val updatedPatients = repository.getAssignedPatients(current.doctorId).getOrDefault(current.patients)
+                _uiState.value = current.copy(
+                    patients = updatedPatients,
+                    showAddPatientDialog = false,
+                    actionSuccessMessage = "Pomyślnie przypisano pacjenta do opieki."
+                )
+            } else {
+                _uiState.value = current.copy(
+                    showAddPatientDialog = false,
+                    actionErrorMessage = "Nie udało się przypisać pacjenta."
+                )
+            }
+        }
+    }
+
+    fun removeAssignedPatient(patientId: String) {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val result = repository.removeAssignedPatient(current.doctorId, patientId)
+            if (result.isSuccess) {
+                val updatedPatients = repository.getAssignedPatients(current.doctorId).getOrDefault(current.patients)
+                _uiState.value = current.copy(
+                    patients = updatedPatients,
+                    actionSuccessMessage = "Usunięto pacjenta z listy opieki."
+                )
+            } else {
+                _uiState.value = current.copy(
+                    actionErrorMessage = "Nie udało się usunąć pacjenta."
+                )
+            }
+        }
+    }
+
+    fun openAddAppointmentDialog() {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val clinicsResult = repository.getClinics()
+            val clinics = clinicsResult.getOrDefault(emptyList())
+
+            _uiState.value = current.copy(
+                clinics = clinics,
+                showAddAppointmentDialog = true
+            )
+        }
+    }
+
+    fun closeAddAppointmentDialog() {
+        val current = _uiState.value as? DoctorUiState.Success ?: return
+        _uiState.value = current.copy(showAddAppointmentDialog = false)
+    }
+
+    fun createAppointment(clinicId: String, scheduledAt: String, notes: String?) {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val patientId = current.selectedPatient?.id ?: return@launch
+
+            val insertDto = AppointmentInsertDto(
+                patient_id = patientId,
+                doctor_id = current.doctorId,
+                clinic_id = clinicId,
+                scheduled_at = scheduledAt,
+                status = "scheduled",
+                notes = notes
+            )
+
+            val result = repository.createAppointment(insertDto)
+            if (result.isSuccess) {
+                val updatedAppointments = repository.getAppointmentsForDoctor(current.doctorId).getOrDefault(current.appointments)
+                _uiState.value = current.copy(
+                    appointments = updatedAppointments,
+                    showAddAppointmentDialog = false,
+                    actionSuccessMessage = "Pomyślnie zaplanowano wizytę."
+                )
+            } else {
+                _uiState.value = current.copy(
+                    showAddAppointmentDialog = false,
+                    actionErrorMessage = "Nie udało się zaplanować wizyty."
+                )
+            }
+        }
+    }
+
+    fun setRecordToEdit(record: MedicalRecordDto?) {
+        val current = _uiState.value as? DoctorUiState.Success ?: return
+        _uiState.value = current.copy(recordToEdit = record)
+    }
+
+    fun updateMedicalRecord(recordId: String, newDescription: String) {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val patientId = current.selectedPatient?.id ?: return@launch
+
+            val result = repository.updateMedicalRecord(recordId, newDescription)
+            if (result.isSuccess) {
+                val updatedRecords = repository.getMedicalRecords(patientId).getOrDefault(current.medicalRecords)
+                _uiState.value = current.copy(
+                    medicalRecords = updatedRecords,
+                    recordToEdit = null,
+                    actionSuccessMessage = "Pomyślnie zaktualizowano wpis medyczny."
+                )
+            } else {
+                _uiState.value = current.copy(
+                    recordToEdit = null,
+                    actionErrorMessage = "Nie udało się zaktualizować wpisu."
+                )
+            }
+        }
+    }
+
+    fun deleteMedicalRecord(recordId: String) {
+        viewModelScope.launch {
+            val current = _uiState.value as? DoctorUiState.Success ?: return@launch
+            val patientId = current.selectedPatient?.id ?: return@launch
+
+            val result = repository.deleteMedicalRecord(recordId)
+            if (result.isSuccess) {
+                val updatedRecords = repository.getMedicalRecords(patientId).getOrDefault(current.medicalRecords)
+                _uiState.value = current.copy(
+                    medicalRecords = updatedRecords,
+                    actionSuccessMessage = "Pomyślnie usunięto wpis medyczny."
+                )
+            } else {
+                _uiState.value = current.copy(
+                    actionErrorMessage = "Nie udało się usunąć wpisu."
+                )
+            }
+        }
     }
 
     fun addMedicalRecord(
@@ -147,8 +308,10 @@ class DoctorViewModel(
 
             val result = repository.createPrescription(insertDto)
             if (result.isSuccess) {
+                val updatedPrescriptions = repository.getPrescriptionsForPatient(patientId).getOrDefault(current.prescriptions)
                 _uiState.value = current.copy(
                     isIssuingPrescriptionLoading = false,
+                    prescriptions = updatedPrescriptions,
                     actionSuccessMessage = "E-recepta została pomyślnie wystawiona! Kod odbioru: $randomCode"
                 )
             } else {
