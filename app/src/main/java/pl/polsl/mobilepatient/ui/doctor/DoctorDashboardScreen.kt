@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.HealthAndSafety
@@ -37,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -194,12 +196,11 @@ fun DoctorDashboardScreen(
                                     TopAppBar(
                                         title = { Text("Moi pacjenci", fontWeight = FontWeight.Bold) },
                                         navigationIcon = {
-                                            OutlinedButton(
-                                                onClick = { currentDestination = DoctorDestination.OVERVIEW },
-                                                modifier = Modifier.padding(start = 8.dp),
-                                                shape = RoundedCornerShape(8.dp)
-                                            ) {
-                                                Text("Wróć")
+                                            IconButton(onClick = { currentDestination = DoctorDestination.OVERVIEW }) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Powrót"
+                                                )
                                             }
                                         },
                                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -229,12 +230,11 @@ fun DoctorDashboardScreen(
                                     TopAppBar(
                                         title = { Text("Terminarz wizyt", fontWeight = FontWeight.Bold) },
                                         navigationIcon = {
-                                            OutlinedButton(
-                                                onClick = { currentDestination = DoctorDestination.OVERVIEW },
-                                                modifier = Modifier.padding(start = 8.dp),
-                                                shape = RoundedCornerShape(8.dp)
-                                            ) {
-                                                Text("Wróć")
+                                            IconButton(onClick = { currentDestination = DoctorDestination.OVERVIEW }) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Powrót"
+                                                )
                                             }
                                         },
                                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)

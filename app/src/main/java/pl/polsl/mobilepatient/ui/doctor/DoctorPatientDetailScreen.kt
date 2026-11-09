@@ -159,41 +159,46 @@ fun DoctorPatientDetailScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(
-                                onClick = onAddRecordClick,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Wpis", style = MaterialTheme.typography.labelMedium)
-                            }
+                                Button(
+                                    onClick = onAddRecordClick,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Nowy wpis", style = MaterialTheme.typography.labelMedium)
+                                }
 
-                            OutlinedButton(
-                                onClick = onIssuePrescriptionClick,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Medication,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Recepta", style = MaterialTheme.typography.labelMedium)
+                                OutlinedButton(
+                                    onClick = onIssuePrescriptionClick,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Medication,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("E-recepta", style = MaterialTheme.typography.labelMedium)
+                                }
                             }
 
                             OutlinedButton(
                                 onClick = onAddAppointmentClick,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Icon(
@@ -202,7 +207,7 @@ fun DoctorPatientDetailScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Wizyta", style = MaterialTheme.typography.labelMedium)
+                                Text("Zaplanuj wizytę", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }

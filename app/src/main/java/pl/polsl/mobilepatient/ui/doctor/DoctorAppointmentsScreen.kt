@@ -184,35 +184,42 @@ private fun AppointmentCardItem(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(
-                    onClick = onSelectPatient,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Karta pacjenta", style = MaterialTheme.typography.labelSmall)
+                    OutlinedButton(
+                        onClick = onSelectPatient,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Karta pacjenta", style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    if (appointment.status == "scheduled") {
+                        OutlinedButton(
+                            onClick = { onUpdateStatus(appointment.id, "completed") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Zrealizuj", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
 
                 if (appointment.status == "scheduled") {
                     OutlinedButton(
-                        onClick = { onUpdateStatus(appointment.id, "completed") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Zrealizuj", style = MaterialTheme.typography.labelSmall)
-                    }
-
-                    OutlinedButton(
                         onClick = { onUpdateStatus(appointment.id, "cancelled") },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
@@ -220,7 +227,7 @@ private fun AppointmentCardItem(
                     ) {
                         Icon(Icons.Default.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Odwołaj", style = MaterialTheme.typography.labelSmall)
+                        Text("Odwołaj wizytę", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
