@@ -12,6 +12,7 @@ data class ProfileDto(
     val address: String? = null,
     val role: String? = null,
     val email: String? = null,
+    val must_change_password: Boolean = false,
 )
 
 @Serializable
@@ -19,5 +20,6 @@ data class ShortProfileDto(
     val id: String,
     val first_name: String,
     val last_name: String,
-    val role: String
+    val role: String,
+    val must_change_password: Boolean = false,
 )

@@ -203,6 +203,7 @@ class AdminRepository(
                     put("first_name", firstName.trim())
                     put("last_name", lastName.trim())
                     put("role", "doctor")
+                    put("must_change_password", true)
                 }
             }
 
@@ -213,6 +214,7 @@ class AdminRepository(
                 client.from("profiles")
                     .update({
                         set("role", "doctor")
+                        set("must_change_password", true)
                         if (!pesel.isNullOrBlank()) set("pesel", pesel.trim())
                         if (!phone.isNullOrBlank()) set("phone", phone.trim())
                         if (!address.isNullOrBlank()) set("address", address.trim())

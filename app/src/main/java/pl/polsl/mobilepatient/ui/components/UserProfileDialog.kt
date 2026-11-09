@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Button
@@ -30,6 +31,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,6 +69,8 @@ fun UserProfileDialog(
     var profile by remember { mutableStateOf<ProfileDto?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
+    var passwordChangeSuccessMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         val result = repository.getMyProfile()
@@ -216,7 +220,45 @@ fun UserProfileDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                if (passwordChangeSuccessMessage != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = passwordChangeSuccessMessage!!,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        passwordChangeSuccessMessage = null
+                        showChangePasswordDialog = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Zmień hasło", fontWeight = FontWeight.SemiBold)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
                     onClick = onDismiss,
@@ -229,6 +271,20 @@ fun UserProfileDialog(
                 }
             }
         }
+    }
+
+    if (showChangePasswordDialog) {
+        ChangePasswordDialog(
+            isForced = false,
+            onSuccess = {
+                showChangePasswordDialog = false
+                passwordChangeSuccessMessage = "Hasło zostało pomyślnie zmienione."
+            },
+            onDismiss = {
+                showChangePasswordDialog = false
+            },
+            userRepository = repository
+        )
     }
 }
 

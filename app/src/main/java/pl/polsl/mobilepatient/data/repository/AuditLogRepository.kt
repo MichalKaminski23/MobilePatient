@@ -1,13 +1,12 @@
 package pl.polsl.mobilepatient.data.repository
 
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import pl.polsl.mobilepatient.data.dto.AuditLogInsertDto
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
 import java.util.UUID
 
-class AuditLogRepository(
-    private val userRepository: UserRepository = UserRepository(),
-) {
+class AuditLogRepository {
     private val client = SupabaseProvider.client
 
     suspend fun logEvent(
@@ -17,7 +16,10 @@ class AuditLogRepository(
         actorId: String? = null
     ): Result<Unit> {
         return try {
-            val resolvedActorId = actorId ?: userRepository.getCurrentUserId()
+            val resolvedActorId = actorId
+                ?: client.auth.currentUserOrNull()?.id
+                ?: client.auth.currentSessionOrNull()?.user?.id
+                ?: SupabaseProvider.cachedUserId
             val validEntityId = if (isValidUuid(entityId)) entityId else null
             val insert = AuditLogInsertDto(
                 actor_id = resolvedActorId,

@@ -3,12 +3,13 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-    INSERT INTO public.profiles (id, first_name, last_name, role)
+    INSERT INTO public.profiles (id, first_name, last_name, role, must_change_password)
     VALUES (
         new.id,
         COALESCE(new.raw_user_meta_data->>'first_name', 'Imię'),
         COALESCE(new.raw_user_meta_data->>'last_name', 'Nazwisko'),
-        COALESCE(new.raw_user_meta_data->>'role', 'patient')
+        COALESCE(new.raw_user_meta_data->>'role', 'patient'),
+        COALESCE((new.raw_user_meta_data->>'must_change_password')::boolean, false)
     );
     RETURN new;
 END;

@@ -71,18 +71,19 @@ BEGIN
         (gen_random_uuid(), v_patient_id, v_patient_id::text, 'email', jsonb_build_object('sub', v_patient_id::text, 'email', 'pacjent@test.pl'), now(), now(), now())
     ON CONFLICT (provider, provider_id) DO NOTHING;
 
-    INSERT INTO public.profiles (id, role, first_name, last_name, pesel, phone, address)
+    INSERT INTO public.profiles (id, role, first_name, last_name, pesel, phone, address, must_change_password)
     VALUES
-        (v_admin_id, 'admin', 'Tomasz', 'Administrator', NULL, '+48 500 000 001', 'ul. Serwerowa 1, Gliwice'),
-        (v_doctor_id, 'doctor', 'Jan', 'Kowalski', '75051201234', '+48 500 000 002', 'ul. Lekarska 4, Zabrze'),
-        (v_patient_id, 'patient', 'Anna', 'Nowak', '98010112345', '+48 500 000 003', 'ul. Pacjencka 12/3, Katowice')
+        (v_admin_id, 'admin', 'Tomasz', 'Administrator', NULL, '+48 500 000 001', 'ul. Serwerowa 1, Gliwice', false),
+        (v_doctor_id, 'doctor', 'Jan', 'Kowalski', '75051201234', '+48 500 000 002', 'ul. Lekarska 4, Zabrze', false),
+        (v_patient_id, 'patient', 'Anna', 'Nowak', '98010112345', '+48 500 000 003', 'ul. Pacjencka 12/3, Katowice', false)
     ON CONFLICT (id) DO UPDATE SET
         role = EXCLUDED.role,
         first_name = EXCLUDED.first_name,
         last_name = EXCLUDED.last_name,
         pesel = EXCLUDED.pesel,
         phone = EXCLUDED.phone,
-        address = EXCLUDED.address;
+        address = EXCLUDED.address,
+        must_change_password = EXCLUDED.must_change_password;
 
     INSERT INTO public.clinics (id, name, address, latitude, longitude, phone)
     VALUES (v_clinic_id, 'Centrum Medyczne Politechniki Śląskiej', 'ul. Akademicka 16, 44-100 Gliwice', 50.2885, 18.6775, '+48 32 237 10 00');

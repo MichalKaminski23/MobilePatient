@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     pesel TEXT UNIQUE,
     phone TEXT,
     address TEXT,
+    must_change_password BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
