@@ -2,6 +2,7 @@ package pl.polsl.mobilepatient.ui.admin
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -42,6 +43,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -80,62 +82,69 @@ fun AdminDashboardScreen(
 ) {
     var currentDestination by remember { mutableStateOf(AdminDestination.OVERVIEW) }
 
-    BackHandler(enabled = currentDestination != AdminDestination.OVERVIEW) {
-        currentDestination = AdminDestination.OVERVIEW
+    BackHandler(enabled = true) {
+        if (currentDestination != AdminDestination.OVERVIEW) {
+            currentDestination = AdminDestination.OVERVIEW
+        } else {
+            onLogout()
+        }
     }
 
-    AnimatedContent(
-        targetState = currentDestination,
-        transitionSpec = {
-            if (targetState != AdminDestination.OVERVIEW) {
-                (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
-                    slideOutHorizontally { width -> -width } + fadeOut()
-                )
-            } else {
-                (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
-                    slideOutHorizontally { width -> width } + fadeOut()
-                )
-            }
-        },
-        label = "AdminNavigationAnimation"
-    ) { destination ->
-        when (destination) {
-            AdminDestination.OVERVIEW -> {
-                AdminOverviewView(
-                    userName = userName,
-                    onOpenClinics = { currentDestination = AdminDestination.CLINICS },
-                    onOpenAuditLogs = { currentDestination = AdminDestination.AUDIT_LOGS },
-                    onOpenStaff = { currentDestination = AdminDestination.STAFF },
-                    onOpenTerms = { currentDestination = AdminDestination.TERMS },
-                    onOpenSettings = { currentDestination = AdminDestination.SETTINGS },
-                    onLogout = onLogout
-                )
-            }
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        AnimatedContent(
+            targetState = currentDestination,
+            transitionSpec = {
+                if (targetState != AdminDestination.OVERVIEW) {
+                    (slideInHorizontally(initialOffsetX = { it }) + fadeIn(animationSpec = tween(220)))
+                        .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 4 }) + fadeOut(animationSpec = tween(220)))
+                } else {
+                    (slideInHorizontally(initialOffsetX = { -it / 4 }) + fadeIn(animationSpec = tween(220)))
+                        .togetherWith(slideOutHorizontally(targetOffsetX = { it }) + fadeOut(animationSpec = tween(220)))
+                }
+            },
+            label = "AdminNavigationAnimation"
+        ) { destination ->
+            when (destination) {
+                AdminDestination.OVERVIEW -> {
+                    AdminOverviewView(
+                        userName = userName,
+                        onOpenClinics = { currentDestination = AdminDestination.CLINICS },
+                        onOpenAuditLogs = { currentDestination = AdminDestination.AUDIT_LOGS },
+                        onOpenStaff = { currentDestination = AdminDestination.STAFF },
+                        onOpenTerms = { currentDestination = AdminDestination.TERMS },
+                        onOpenSettings = { currentDestination = AdminDestination.SETTINGS },
+                        onLogout = onLogout
+                    )
+                }
 
-            AdminDestination.CLINICS -> {
-                AdminClinicsScreen(
-                    onBack = { currentDestination = AdminDestination.OVERVIEW }
-                )
-            }
+                AdminDestination.CLINICS -> {
+                    AdminClinicsScreen(
+                        onBack = { currentDestination = AdminDestination.OVERVIEW }
+                    )
+                }
 
-            AdminDestination.AUDIT_LOGS -> {
-                AdminAuditLogsScreen(
-                    onBack = { currentDestination = AdminDestination.OVERVIEW }
-                )
-            }
+                AdminDestination.AUDIT_LOGS -> {
+                    AdminAuditLogsScreen(
+                        onBack = { currentDestination = AdminDestination.OVERVIEW }
+                    )
+                }
 
-            AdminDestination.STAFF -> {
-                AdminStaffScreen(
-                    onBack = { currentDestination = AdminDestination.OVERVIEW }
-                )
-            }
+                AdminDestination.STAFF -> {
+                    AdminStaffScreen(
+                        onBack = { currentDestination = AdminDestination.OVERVIEW }
+                    )
+                }
 
-            AdminDestination.TERMS -> {
-                TermsAndPrivacyScreen(onBack = { currentDestination = AdminDestination.OVERVIEW })
-            }
+                AdminDestination.TERMS -> {
+                    TermsAndPrivacyScreen(onBack = { currentDestination = AdminDestination.OVERVIEW })
+                }
 
-            AdminDestination.SETTINGS -> {
-                SettingsScreen(onBack = { currentDestination = AdminDestination.OVERVIEW })
+                AdminDestination.SETTINGS -> {
+                    SettingsScreen(onBack = { currentDestination = AdminDestination.OVERVIEW })
+                }
             }
         }
     }

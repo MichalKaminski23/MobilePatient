@@ -2,6 +2,7 @@ package pl.polsl.mobilepatient.ui.doctor
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -94,12 +95,14 @@ fun DoctorDashboardScreen(
     var patientForAddRecord by remember { mutableStateOf<ProfileDto?>(null) }
     var patientForIssuePrescription by remember { mutableStateOf<ProfileDto?>(null) }
 
-    BackHandler(enabled = currentDestination != DoctorDestination.OVERVIEW || (uiState is DoctorUiState.Success && (uiState as DoctorUiState.Success).selectedPatient != null)) {
+    BackHandler(enabled = true) {
         val state = uiState as? DoctorUiState.Success
         if (state?.selectedPatient != null) {
             viewModel.clearSelectedPatient()
-        } else {
+        } else if (currentDestination != DoctorDestination.OVERVIEW) {
             currentDestination = DoctorDestination.OVERVIEW
+        } else {
+            onLogout()
         }
     }
 
@@ -121,60 +124,64 @@ fun DoctorDashboardScreen(
         }
     }
 
-    when (val state = uiState) {
-        is DoctorUiState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        when (val state = uiState) {
+            is DoctorUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        }
 
-        is DoctorUiState.Error -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = state.message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+            is DoctorUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
-        }
 
-        is DoctorUiState.Success -> {
-            if (state.selectedPatient != null) {
-                DoctorPatientDetailScreen(
-                    patient = state.selectedPatient,
-                    records = state.medicalRecords,
-                    prescriptions = state.prescriptions,
-                    onBack = { viewModel.clearSelectedPatient() },
-                    onAddRecordClick = { patientForAddRecord = state.selectedPatient },
-                    onIssuePrescriptionClick = {
-                        patientForIssuePrescription = state.selectedPatient
-                    },
-                    onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
-                    onEditRecordClick = { viewModel.setRecordToEdit(it) },
-                    onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
-                )
-            } else {
-                AnimatedContent(
-                    targetState = currentDestination,
-                    transitionSpec = {
-                        if (targetState != DoctorDestination.OVERVIEW) {
-                            slideInHorizontally(initialOffsetX = { it }) + fadeIn() togetherWith
-                                    slideOutHorizontally(targetOffsetX = { -it / 3 }) + fadeOut()
-                        } else {
-                            slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn() togetherWith
-                                    slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
-                        }
-                    },
-                    label = "DoctorDestinationTransition"
-                ) { destination ->
+            is DoctorUiState.Success -> {
+                if (state.selectedPatient != null) {
+                    DoctorPatientDetailScreen(
+                        patient = state.selectedPatient,
+                        records = state.medicalRecords,
+                        prescriptions = state.prescriptions,
+                        onBack = { viewModel.clearSelectedPatient() },
+                        onAddRecordClick = { patientForAddRecord = state.selectedPatient },
+                        onIssuePrescriptionClick = {
+                            patientForIssuePrescription = state.selectedPatient
+                        },
+                        onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
+                        onEditRecordClick = { viewModel.setRecordToEdit(it) },
+                        onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
+                    )
+                } else {
+                    AnimatedContent(
+                        targetState = currentDestination,
+                        transitionSpec = {
+                            if (targetState != DoctorDestination.OVERVIEW) {
+                                (slideInHorizontally(initialOffsetX = { it }) + fadeIn(animationSpec = tween(220)))
+                                    .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 4 }) + fadeOut(animationSpec = tween(220)))
+                            } else {
+                                (slideInHorizontally(initialOffsetX = { -it / 4 }) + fadeIn(animationSpec = tween(220)))
+                                    .togetherWith(slideOutHorizontally(targetOffsetX = { it }) + fadeOut(animationSpec = tween(220)))
+                            }
+                        },
+                        label = "DoctorDestinationTransition"
+                    ) { destination ->
                     when (destination) {
                         DoctorDestination.OVERVIEW -> {
                             DashboardOverview(
@@ -319,6 +326,7 @@ fun DoctorDashboardScreen(
             }
         }
     }
+}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
