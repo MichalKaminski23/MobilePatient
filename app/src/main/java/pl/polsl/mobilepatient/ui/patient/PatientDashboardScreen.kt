@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,6 +44,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -87,25 +89,33 @@ fun PatientDashboardScreen(
 ) {
     var currentDestination by remember { mutableStateOf(PatientDestination.OVERVIEW) }
 
-    BackHandler(enabled = currentDestination != PatientDestination.OVERVIEW) {
-        currentDestination = PatientDestination.OVERVIEW
+    BackHandler(enabled = true) {
+        if (currentDestination != PatientDestination.OVERVIEW) {
+            currentDestination = PatientDestination.OVERVIEW
+        } else {
+            onLogout()
+        }
     }
 
-    AnimatedContent(
-        targetState = currentDestination,
-        transitionSpec = {
-            if (targetState != PatientDestination.OVERVIEW) {
-                slideInHorizontally(initialOffsetX = { it }) + fadeIn() togetherWith
-                        slideOutHorizontally(targetOffsetX = { -it / 3 }) + fadeOut()
-            } else {
-                slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn() togetherWith
-                        slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
-            }
-        },
-        label = "DashboardTransition"
-    ) { destination ->
-        when (destination) {
-            PatientDestination.OVERVIEW -> {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        AnimatedContent(
+            targetState = currentDestination,
+            transitionSpec = {
+                if (targetState != PatientDestination.OVERVIEW) {
+                    (slideInHorizontally(initialOffsetX = { it }) + fadeIn(animationSpec = tween(220)))
+                        .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 4 }) + fadeOut(animationSpec = tween(220)))
+                } else {
+                    (slideInHorizontally(initialOffsetX = { -it / 4 }) + fadeIn(animationSpec = tween(220)))
+                        .togetherWith(slideOutHorizontally(targetOffsetX = { it }) + fadeOut(animationSpec = tween(220)))
+                }
+            },
+            label = "DashboardTransition"
+        ) { destination ->
+            when (destination) {
+                PatientDestination.OVERVIEW -> {
                 DashboardOverview(
                     role = role,
                     userName = userName,
@@ -150,6 +160,7 @@ fun PatientDashboardScreen(
                 SettingsScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
             }
         }
+    }
     }
 }
 

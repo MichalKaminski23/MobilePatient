@@ -55,9 +55,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.polsl.mobilepatient.data.dto.PatientAppointmentDetailsDto
 import pl.polsl.mobilepatient.notifications.NotificationHelper
+import pl.polsl.mobilepatient.ui.components.ConfirmActionDialog
 import pl.polsl.mobilepatient.ui.components.IconBadge
 import pl.polsl.mobilepatient.ui.patient.components.BookAppointmentDialog
-import pl.polsl.mobilepatient.ui.patient.components.ConfirmActionDialog
 import pl.polsl.mobilepatient.ui.patient.components.EmptyStateView
 import pl.polsl.mobilepatient.ui.patient.components.ErrorMessageBanner
 import pl.polsl.mobilepatient.ui.patient.components.SuccessMessageBanner

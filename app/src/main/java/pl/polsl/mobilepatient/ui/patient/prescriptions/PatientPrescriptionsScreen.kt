@@ -38,8 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.polsl.mobilepatient.data.dto.PrescriptionDto
+import pl.polsl.mobilepatient.ui.components.ConfirmActionDialog
 import pl.polsl.mobilepatient.ui.components.IconBadge
-import pl.polsl.mobilepatient.ui.patient.components.ConfirmActionDialog
 import pl.polsl.mobilepatient.ui.patient.components.EmptyStateView
 import pl.polsl.mobilepatient.ui.patient.components.ErrorMessageBanner
 

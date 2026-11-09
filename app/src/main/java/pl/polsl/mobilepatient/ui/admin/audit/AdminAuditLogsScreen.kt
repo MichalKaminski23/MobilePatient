@@ -286,21 +286,16 @@ fun AdminAuditLogsScreen(
                             }
                         }
                         Text(
-                            text = if (uiState.searchQuery.isBlank()) "Dziennik audytu jest pusty" else "Brak wyników wyszukiwania",
+                            text = if (uiState.searchQuery.isBlank()) "Brak logów w tej grupie" else "Brak wyników wyszukiwania",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-//                        Text(
-//                            text = if (uiState.searchQuery.isBlank()) {
-//                                "Możesz wygenerować pierwsze zdarzenie audytowe, klikając przycisk 'Test T11' powyżej."
-//                            } else {
-//                                "Spróbuj zmienić parametry wyszukiwania lub filtr kategorii."
-//                            },
-//                            style = MaterialTheme.typography.bodyMedium,
-//                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                            modifier = Modifier.padding(horizontal = 16.dp)
-//                        )
+                        Text(
+                            text = "Zmień kryteria wyszukiwania lub wybierz inną zakładkę logów.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             } else {
