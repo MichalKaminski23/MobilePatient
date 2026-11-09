@@ -108,7 +108,7 @@ class PatientRepository {
                 }
                 .decodeList<MedicalFileDto>()
 
-            val bucket = client.storage.from("skany-medyczne")
+            val bucket = client.storage.from("medical-scans")
             val filesWithUrls = files.map { file ->
                 val signedUrl = try {
                     bucket.createSignedUrl(path = file.storage_path, expiresIn = 24.hours)
@@ -136,7 +136,7 @@ class PatientRepository {
 
     suspend fun downloadFileBytes(storagePath: String): Result<ByteArray> {
         return try {
-            val bucket = client.storage.from("skany-medyczne")
+            val bucket = client.storage.from("medical-scans")
             val bytes = bucket.downloadAuthenticated(storagePath)
             Result.success(bytes)
         } catch (e: Exception) {
@@ -150,12 +150,8 @@ class PatientRepository {
                 ?: return Result.failure(IllegalStateException("Brak aktywnej sesji użytkownika."))
 
             try {
-                client.storage.from("skany-medyczne").delete(listOf(storagePath))
-            } catch (e: Exception) {
-                android.util.Log.w(
-                    "PatientRepository",
-                    "Plik $storagePath mógł zostać usunięty ręcznie ze storage: ${e.message}"
-                )
+                client.storage.from("medical-scans").delete(listOf(storagePath))
+            } catch (_: Exception) {
             }
 
             client.from("medical_files")
@@ -194,7 +190,7 @@ class PatientRepository {
             val cleanName = fileName.replace(Regex("[^a-zA-Z0-9._-]"), "_")
             val storagePath = "$userId/${System.currentTimeMillis()}_$cleanName"
 
-            val bucket = client.storage.from("skany-medyczne")
+            val bucket = client.storage.from("medical-scans")
             bucket.upload(path = storagePath, data = bytes) {
                 upsert = true
             }

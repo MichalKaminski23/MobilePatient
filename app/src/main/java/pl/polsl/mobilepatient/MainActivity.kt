@@ -6,6 +6,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
+import pl.polsl.mobilepatient.notifications.NotificationHelper
 import pl.polsl.mobilepatient.ui.theme.ThemeManager
 
 class MainActivity : ComponentActivity() {
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_SECURE
         )
         ThemeManager.init(applicationContext)
+        NotificationHelper.createNotificationChannels(applicationContext)
         val deepLinkPatientId = extractPatientIdFromIntent(intent)
         setContent {
             MobilePatientApp(deepLinkPatientId = deepLinkPatientId)

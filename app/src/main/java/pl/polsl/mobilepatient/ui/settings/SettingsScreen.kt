@@ -69,6 +69,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
+import pl.polsl.mobilepatient.notifications.NotificationHelper
 import pl.polsl.mobilepatient.ui.components.IconBadge
 import pl.polsl.mobilepatient.ui.theme.ThemeManager
 import pl.polsl.mobilepatient.ui.theme.ThemeMode
@@ -124,6 +125,9 @@ fun SettingsScreen(onBack: () -> Unit) {
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         notificationPermissionState = isGranted
+        if (isGranted) {
+            NotificationHelper.showTestNotification(context)
+        }
     }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -354,11 +358,17 @@ fun SettingsScreen(onBack: () -> Unit) {
                                 )
                                 if (current == PackageManager.PERMISSION_GRANTED) {
                                     notificationPermissionState = true
+                                    pl.polsl.mobilepatient.notifications.NotificationHelper.showTestNotification(
+                                        context
+                                    )
                                 } else {
                                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                 }
                             } else {
                                 notificationPermissionState = true
+                                pl.polsl.mobilepatient.notifications.NotificationHelper.showTestNotification(
+                                    context
+                                )
                             }
                         },
                         modifier = Modifier.heightIn(min = 48.dp),

@@ -1,6 +1,10 @@
 package pl.polsl.mobilepatient.ui.patient.visits
 
+import android.Manifest
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -48,6 +54,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.polsl.mobilepatient.data.dto.PatientAppointmentDetailsDto
+import pl.polsl.mobilepatient.notifications.NotificationHelper
 import pl.polsl.mobilepatient.ui.components.IconBadge
 import pl.polsl.mobilepatient.ui.patient.components.BookAppointmentDialog
 import pl.polsl.mobilepatient.ui.patient.components.ConfirmActionDialog
@@ -63,11 +70,51 @@ fun PatientVisitsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
     BackHandler(onBack = onBack)
 
     var showBookingDialog by remember { mutableStateOf(false) }
     var appointmentToCancel by remember { mutableStateOf<PatientAppointmentDetailsDto?>(null) }
+    var pendingReminderAppointment by remember { mutableStateOf<PatientAppointmentDetailsDto?>(null) }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            pendingReminderAppointment?.let { appt ->
+                NotificationHelper.scheduleAppointmentReminder(
+                    context = context,
+                    appointmentId = appt.id,
+                    clinicName = appt.clinic_name,
+                    doctorName = appt.doctor_name,
+                    scheduledAt = appt.scheduled_at,
+                    delaySeconds = 5
+                )
+                Toast.makeText(
+                    context,
+                    "Powiadomienie przypominające nadejdzie za 5 sekund!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                pendingReminderAppointment = null
+            }
+        } else {
+            Toast.makeText(context, "Brak uprawnienia do powiadomień.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(uiState.appointments) {
+        val scheduledList = uiState.appointments.filter { it.status.lowercase() == "scheduled" }
+        scheduledList.forEach { appt ->
+            NotificationHelper.scheduleAppointmentReminder(
+                context = context,
+                appointmentId = appt.id,
+                clinicName = appt.clinic_name,
+                doctorName = appt.doctor_name,
+                scheduledAt = appt.scheduled_at
+            )
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -231,6 +278,26 @@ fun PatientVisitsScreen(
                                     appointment = appointment,
                                     isCancelling = uiState.isCancelling,
                                     onCancelClick = { appointmentToCancel = appointment },
+                                    onReminderClick = {
+                                        if (!NotificationHelper.hasNotificationPermission(context)) {
+                                            pendingReminderAppointment = appointment
+                                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        } else {
+                                            NotificationHelper.scheduleAppointmentReminder(
+                                                context = context,
+                                                appointmentId = appointment.id,
+                                                clinicName = appointment.clinic_name,
+                                                doctorName = appointment.doctor_name,
+                                                scheduledAt = appointment.scheduled_at,
+                                                delaySeconds = 5
+                                            )
+                                            Toast.makeText(
+                                                context,
+                                                "Powiadomienie przypominające nadejdzie za 5 sekund!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -276,6 +343,7 @@ fun PatientVisitsScreen(
             onConfirm = {
                 val id = appointment.id
                 appointmentToCancel = null
+                NotificationHelper.cancelAppointmentReminder(context, id)
                 viewModel.cancelAppointment(id)
             },
             onDismiss = { appointmentToCancel = null },

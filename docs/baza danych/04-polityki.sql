@@ -87,10 +87,10 @@ CREATE POLICY "Dostęp do medical_files" ON public.medical_files
 FOR ALL USING (patient_id = auth.uid() OR uploaded_by = auth.uid())
 WITH CHECK (patient_id = auth.uid() OR uploaded_by = auth.uid());
 
-DROP POLICY IF EXISTS "Dostęp do bucketu skany-medyczne" ON storage.objects;
-CREATE POLICY "Dostęp do bucketu skany-medyczne" ON storage.objects
-FOR ALL USING (bucket_id = 'skany-medyczne')
-WITH CHECK (bucket_id = 'skany-medyczne');
+DROP POLICY IF EXISTS "Dostęp do bucketu medical-scans" ON storage.objects;
+CREATE POLICY "Dostęp do bucketu medical-scans" ON storage.objects
+FOR ALL USING (bucket_id = 'medical-scans')
+WITH CHECK (bucket_id = 'medical-scans');
 
 -- Polityki RLS dla administratora oraz zapisu dziennika audytowego.
 
