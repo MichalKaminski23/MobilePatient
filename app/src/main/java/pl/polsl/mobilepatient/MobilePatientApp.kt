@@ -10,6 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
+import pl.polsl.mobilepatient.ui.admin.AdminDashboardScreen
 import pl.polsl.mobilepatient.ui.auth.login.LoginScreen
 import pl.polsl.mobilepatient.ui.doctor.DoctorDashboardScreen
 import pl.polsl.mobilepatient.ui.patient.PatientDashboardScreen
@@ -69,8 +70,11 @@ fun MobilePatientApp(
                     )
                 }
 
-                else -> {
-                    // admin
+                "admin" -> {
+                    AdminDashboardScreen(
+                        userName = loggedInName,
+                        onLogout = logoutAction
+                    )
                 }
             }
         }

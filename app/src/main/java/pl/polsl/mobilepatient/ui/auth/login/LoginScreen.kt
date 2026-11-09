@@ -66,7 +66,7 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    var email by remember { mutableStateOf("pacjent@test.pl") } // pamiętać aby usunąć i zostawić puste LUB lekarz@test.pl
+    var email by remember { mutableStateOf("admin@test.pl") } // pamiętać aby usunąć i zostawić puste LUB lekarz@test.pl
     var password by remember { mutableStateOf("test123!") } // pamiętać aby usunąć i zostawić puste
     var isPasswordVisible by remember { mutableStateOf(false) }
 
