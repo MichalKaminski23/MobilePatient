@@ -9,6 +9,7 @@ import pl.polsl.mobilepatient.data.network.SupabaseProvider
 class AuthRepository {
 
     private val client = SupabaseProvider.client
+    private val auditLogRepository = AuditLogRepository()
 
     suspend fun signIn(
         email: String,
@@ -44,6 +45,16 @@ class AuthRepository {
                     )
                 )
 
+            try {
+                auditLogRepository.logEvent(
+                    action = "LOGIN",
+                    entityType = "profiles",
+                    entityId = userId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(profile)
         } catch (exception: Exception) {
             val message = exception.message.orEmpty()
@@ -60,6 +71,18 @@ class AuthRepository {
     }
 
     suspend fun signOut() {
+        val currentUserId = client.auth.currentUserOrNull()?.id ?: SupabaseProvider.cachedUserId
+        if (currentUserId != null) {
+            try {
+                auditLogRepository.logEvent(
+                    action = "LOGOUT",
+                    entityType = "profiles",
+                    entityId = currentUserId,
+                    actorId = currentUserId
+                )
+            } catch (_: Exception) {
+            }
+        }
         SupabaseProvider.cachedUserId = null
         client.auth.signOut()
     }

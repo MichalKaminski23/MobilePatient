@@ -12,3 +12,12 @@ data class ClinicDto(
     val phone: String? = null,
     val created_at: String? = null
 )
+
+@Serializable
+data class ClinicInsertDto(
+    val name: String,
+    val address: String,
+    val latitude: Double,
+    val longitude: Double,
+    val phone: String? = null
+)

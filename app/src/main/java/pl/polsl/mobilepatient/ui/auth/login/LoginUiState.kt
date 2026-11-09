@@ -7,7 +7,8 @@ sealed interface LoginUiState {
 
     data class Success(
         val role: String,
-        val userName: String
+        val userName: String,
+        val mustChangePassword: Boolean = false,
     ) : LoginUiState
 
     data class Error(

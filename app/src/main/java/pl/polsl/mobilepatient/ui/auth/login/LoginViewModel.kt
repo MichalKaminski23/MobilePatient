@@ -33,7 +33,8 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 onSuccess = { profile ->
                     LoginUiState.Success(
                         role = profile.role,
-                        userName = "${profile.first_name} ${profile.last_name}"
+                        userName = "${profile.first_name} ${profile.last_name}",
+                        mustChangePassword = profile.must_change_password
                     )
                 },
                 onFailure = { error ->

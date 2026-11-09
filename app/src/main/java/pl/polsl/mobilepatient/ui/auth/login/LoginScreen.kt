@@ -52,30 +52,62 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
+import pl.polsl.mobilepatient.ui.components.ChangePasswordDialog
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (role: String, userName: String) -> Unit
 ) {
+    val authRepository = remember { AuthRepository() }
     val viewModel: LoginViewModel = viewModel {
         LoginViewModel(
-            authRepository = AuthRepository()
+            authRepository = authRepository
         )
     }
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
 
-    var email by remember { mutableStateOf("pacjent@test.pl") } // pamiętać aby usunąć i zostawić puste LUB lekarz@test.pl
+    var email by remember { mutableStateOf("admin@test.pl") } // pamiętać aby usunąć i zostawić puste LUB lekarz@test.pl
     var password by remember { mutableStateOf("test123!") } // pamiętać aby usunąć i zostawić puste
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var forcedPasswordChangeTarget by remember { mutableStateOf<LoginUiState.Success?>(null) }
 
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
             val success = uiState as LoginUiState.Success
-            onLoginSuccess(success.role, success.userName)
-            viewModel.resetState()
+            if (success.mustChangePassword) {
+                forcedPasswordChangeTarget = success
+            } else {
+                onLoginSuccess(success.role, success.userName)
+                viewModel.resetState()
+            }
         }
+    }
+
+    if (forcedPasswordChangeTarget != null) {
+        val target = forcedPasswordChangeTarget!!
+        ChangePasswordDialog(
+            isForced = true,
+            onSuccess = {
+                val role = target.role
+                val userName = target.userName
+                forcedPasswordChangeTarget = null
+                viewModel.resetState()
+                onLoginSuccess(role, userName)
+            },
+            onDismiss = {},
+            onLogout = {
+                scope.launch {
+                    authRepository.signOut()
+                    forcedPasswordChangeTarget = null
+                    viewModel.resetState()
+                }
+            }
+        )
     }
 
     Surface(

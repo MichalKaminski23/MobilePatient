@@ -1,6 +1,5 @@
 package pl.polsl.mobilepatient.data.repository
 
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import pl.polsl.mobilepatient.data.dto.AppointmentDto
@@ -18,28 +17,11 @@ import kotlin.time.Duration.Companion.hours
 class PatientRepository {
 
     private val client = SupabaseProvider.client
+    private val userRepository = UserRepository()
+    private val auditLogRepository = AuditLogRepository()
 
     suspend fun getCurrentUserId(): String? {
-        val direct = client.auth.currentUserOrNull()?.id
-            ?: client.auth.currentSessionOrNull()?.user?.id
-        if (!direct.isNullOrBlank()) {
-            SupabaseProvider.cachedUserId = direct
-            return direct
-        }
-
-        try {
-            client.auth.awaitInitialization()
-        } catch (_: Exception) {
-        }
-
-        val afterInit = client.auth.currentUserOrNull()?.id
-            ?: client.auth.currentSessionOrNull()?.user?.id
-        if (!afterInit.isNullOrBlank()) {
-            SupabaseProvider.cachedUserId = afterInit
-            return afterInit
-        }
-
-        return SupabaseProvider.cachedUserId
+        return userRepository.getCurrentUserId()
     }
 
     suspend fun getMyMedicalRecords(): Result<List<MedicalRecordDto>> {
@@ -97,6 +79,16 @@ class PatientRepository {
                     }
                 }
 
+            try {
+                auditLogRepository.logEvent(
+                    action = "FULFILL_PRESCRIPTION",
+                    entityType = "prescriptions",
+                    entityId = prescriptionId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -116,7 +108,7 @@ class PatientRepository {
                 }
                 .decodeList<MedicalFileDto>()
 
-            val bucket = client.storage.from("skany-medyczne")
+            val bucket = client.storage.from("medical-scans")
             val filesWithUrls = files.map { file ->
                 val signedUrl = try {
                     bucket.createSignedUrl(path = file.storage_path, expiresIn = 24.hours)
@@ -144,7 +136,7 @@ class PatientRepository {
 
     suspend fun downloadFileBytes(storagePath: String): Result<ByteArray> {
         return try {
-            val bucket = client.storage.from("skany-medyczne")
+            val bucket = client.storage.from("medical-scans")
             val bytes = bucket.downloadAuthenticated(storagePath)
             Result.success(bytes)
         } catch (e: Exception) {
@@ -158,12 +150,8 @@ class PatientRepository {
                 ?: return Result.failure(IllegalStateException("Brak aktywnej sesji użytkownika."))
 
             try {
-                client.storage.from("skany-medyczne").delete(listOf(storagePath))
-            } catch (e: Exception) {
-                android.util.Log.w(
-                    "PatientRepository",
-                    "Plik $storagePath mógł zostać usunięty ręcznie ze storage: ${e.message}"
-                )
+                client.storage.from("medical-scans").delete(listOf(storagePath))
+            } catch (_: Exception) {
             }
 
             client.from("medical_files")
@@ -173,6 +161,16 @@ class PatientRepository {
                         eq("patient_id", userId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "DELETE_FILE",
+                    entityType = "medical_files",
+                    entityId = fileId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -192,7 +190,7 @@ class PatientRepository {
             val cleanName = fileName.replace(Regex("[^a-zA-Z0-9._-]"), "_")
             val storagePath = "$userId/${System.currentTimeMillis()}_$cleanName"
 
-            val bucket = client.storage.from("skany-medyczne")
+            val bucket = client.storage.from("medical-scans")
             bucket.upload(path = storagePath, data = bytes) {
                 upsert = true
             }
@@ -211,6 +209,16 @@ class PatientRepository {
                     select()
                 }
                 .decodeSingle<MedicalFileDto>()
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPLOAD_FILE",
+                    entityType = "medical_files",
+                    entityId = inserted.id,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
 
             val signedUrl = try {
                 bucket.createSignedUrl(path = storagePath, expiresIn = 24.hours)
@@ -301,6 +309,17 @@ class PatientRepository {
                     select()
                 }
                 .decodeSingle<AppointmentDto>()
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "BOOK_APPOINTMENT",
+                    entityType = "appointments",
+                    entityId = inserted.id,
+                    actorId = appointment.patient_id
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(inserted)
         } catch (e: Exception) {
             Result.failure(e)
@@ -321,29 +340,18 @@ class PatientRepository {
                         eq("patient_id", userId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "CANCEL_APPOINTMENT",
+                    entityType = "appointments",
+                    entityId = appointmentId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getMyProfile(): Result<ProfileDto> {
-        return try {
-            val userId = getCurrentUserId()
-                ?: return Result.failure(IllegalStateException("Brak aktywnej sesji użytkownika."))
-            val email = client.auth.currentUserOrNull()?.email
-                ?: client.auth.currentSessionOrNull()?.user?.email
-
-            val profile = client.from("profiles")
-                .select {
-                    filter {
-                        eq("id", userId)
-                    }
-                }
-                .decodeSingleOrNull<ProfileDto>()
-                ?: return Result.failure(IllegalStateException("Nie znaleziono profilu pacjenta."))
-
-            Result.success(profile.copy(email = email))
         } catch (e: Exception) {
             Result.failure(e)
         }
