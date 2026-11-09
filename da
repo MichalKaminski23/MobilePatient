@@ -1,0 +1,25 @@
+* [33m9cec814[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/doctor_panel[m[33m, [m[1;31morigin/feat/doctor_panel[m[33m)[m feat: update doctor panel
+* [33m2caacef[m feat: ui changes
+*   [33m84f69c3[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge pull request #3 from MichalKaminski23/feat/admin_panel
+[32m|[m[33m\[m  
+[32m|[m * [33m2945124[m[33m ([m[1;31morigin/feat/admin_panel[m[33m)[m feat: rename storage bucket and update related policies; add appointment reminder notifications
+[32m|[m * [33m814ab7b[m feat: add must_change_password flag to user profiles and implement password change functionality
+[32m|[m * [33ma9d30fe[m feat: implement audit logging for various actions across repositories
+[32m|[m * [33m72b6f92[m sql codes clean
+[32m|[m * [33m0a98fca[m Admin panel and new icon and small refactors
+[32m|[m[32m/[m  
+* [33m681bb24[m[33m ([m[1;31morigin/feat/doctor-panel[m[33m, [m[1;32mfeat/doctor-panel[m[33m)[m Additional doctor functionalities added
+*   [33m088bb5e[m Merge pull request #2 from MichalKaminski23/feat/patient_module
+[34m|[m[35m\[m  
+[34m|[m * [33m802c4fb[m added secure flags and user can't do screenshots
+[34m|[m * [33m958629f[m feat: implement encrypted session management and initialize Supabase client
+[34m|[m * [33m822bcb5[m Added the rest of patient modules, refactored code and made the whole app better
+[34m|[m * [33m81d9c3d[m feat: add data transfer objects and view models for patient records, prescriptions, scans, and visits
+[34m|[m[34m/[m  
+* [33mfbfe3e7[m docs from Z4 add
+* [33m4ad40d7[m doctor functionality: add doctor dashboard, patient history, e-prescriptions and deep link handling
+* [33ma53aa69[m dane-lokalne add
+* [33m896af72[m permissions (Test odmowy każdego uprawnienia), code refactor and better app view
+* [33m01479c9[m refactor: update AndroidManifest and permissions, enhance security and user experience (zadanie: usuniete zbedne uprawnienia)
+*   [33m6b8e3c9[m Merge pull request #1 from MichalKaminski23/feature/login-screen
+[36m|[m[1;31m\[m  

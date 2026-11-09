@@ -83,6 +83,17 @@ class DoctorRepository {
                         "patient_id" to patientId
                     )
                 )
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "ASSIGN_PATIENT",
+                    entityType = "doctor_patients",
+                    entityId = patientId,
+                    actorId = doctorId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("DoctorRepository", "Błąd assignPatient: ${e.message}", e)
@@ -99,6 +110,17 @@ class DoctorRepository {
                         eq("patient_id", patientId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "REMOVE_PATIENT",
+                    entityType = "doctor_patients",
+                    entityId = patientId,
+                    actorId = doctorId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("DoctorRepository", "Błąd removeAssignedPatient: ${e.message}", e)
@@ -152,6 +174,16 @@ class DoctorRepository {
                         eq("id", recordId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPDATE_RECORD",
+                    entityType = "medical_records",
+                    entityId = recordId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("DoctorRepository", "Błąd updateMedicalRecord: ${e.message}", e)
@@ -167,6 +199,16 @@ class DoctorRepository {
                         eq("id", recordId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "DELETE_RECORD",
+                    entityType = "medical_records",
+                    entityId = recordId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("DoctorRepository", "Błąd deleteMedicalRecord: ${e.message}", e)
@@ -266,6 +308,16 @@ class DoctorRepository {
                 }
                 .decodeSingle<MedicalFileDto>()
 
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPLOAD_FILE",
+                    entityType = "medical_files",
+                    entityId = inserted.id,
+                    actorId = doctorId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(inserted)
         } catch (e: Exception) {
             Log.e("DoctorRepository", "Błąd uploadMedicalFileForPatient: ${e.message}", e)
@@ -285,6 +337,15 @@ class DoctorRepository {
                         eq("id", fileId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "DELETE_FILE",
+                    entityType = "medical_files",
+                    entityId = fileId
+                )
+            } catch (_: Exception) {
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -324,6 +385,7 @@ class DoctorRepository {
 
             Result.success(newRecord)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd addMedicalRecord: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -348,6 +410,7 @@ class DoctorRepository {
 
             Result.success(created)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd createPrescription: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -372,6 +435,7 @@ class DoctorRepository {
 
             Result.success(created)
         } catch (e: Exception) {
+            Log.e("DoctorRepository", "Błąd createAppointment: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -437,6 +501,16 @@ class DoctorRepository {
                         eq("id", appointmentId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPDATE_APPOINTMENT_STATUS",
+                    entityType = "appointments",
+                    entityId = appointmentId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("DoctorRepository", "Błąd updateAppointmentStatus: ${e.message}", e)
