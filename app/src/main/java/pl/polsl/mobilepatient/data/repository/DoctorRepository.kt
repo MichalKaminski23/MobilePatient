@@ -1,6 +1,5 @@
 package pl.polsl.mobilepatient.data.repository
 
-import android.util.Log
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import pl.polsl.mobilepatient.data.dto.AppointmentDto
@@ -18,6 +17,7 @@ import pl.polsl.mobilepatient.data.network.SupabaseProvider
 class DoctorRepository {
 
     private val client = SupabaseProvider.client
+    private val auditLogRepository = AuditLogRepository()
 
     fun getCurrentUserId(): String? {
         return client.auth.currentUserOrNull()?.id
@@ -48,7 +48,6 @@ class DoctorRepository {
 
             Result.success(patients)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getAssignedPatients: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -64,7 +63,6 @@ class DoctorRepository {
                 .decodeList<ProfileDto>()
             Result.success(patients)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getAllPatients: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -78,9 +76,19 @@ class DoctorRepository {
                         "patient_id" to patientId
                     )
                 )
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "ASSIGN_PATIENT",
+                    entityType = "doctor_patients",
+                    entityId = patientId,
+                    actorId = doctorId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd assignPatient: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -94,9 +102,19 @@ class DoctorRepository {
                         eq("patient_id", patientId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "REMOVE_ASSIGNED_PATIENT",
+                    entityType = "doctor_patients",
+                    entityId = patientId,
+                    actorId = doctorId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd removeAssignedPatient: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -114,7 +132,6 @@ class DoctorRepository {
 
             Result.success(profile)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getPatientDetails: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -132,7 +149,6 @@ class DoctorRepository {
             val sorted = records.sortedByDescending { it.created_at ?: "" }
             Result.success(sorted)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getMedicalRecords: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -147,9 +163,18 @@ class DoctorRepository {
                         eq("id", recordId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPDATE_RECORD",
+                    entityType = "medical_records",
+                    entityId = recordId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd updateMedicalRecord: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -162,9 +187,18 @@ class DoctorRepository {
                         eq("id", recordId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "DELETE_RECORD",
+                    entityType = "medical_records",
+                    entityId = recordId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd deleteMedicalRecord: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -182,7 +216,6 @@ class DoctorRepository {
             val sorted = prescriptions.sortedByDescending { it.issued_at ?: "" }
             Result.success(sorted)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getPrescriptionsForPatient: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -194,7 +227,6 @@ class DoctorRepository {
                 .decodeList<ClinicDto>()
             Result.success(clinics)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getClinics: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -207,9 +239,18 @@ class DoctorRepository {
                 }
                 .decodeSingle<MedicalRecordDto>()
 
+            try {
+                auditLogRepository.logEvent(
+                    action = "CREATE_RECORD",
+                    entityType = "medical_records",
+                    entityId = newRecord.id,
+                    actorId = record.doctor_id
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(newRecord)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd addMedicalRecord: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -222,9 +263,18 @@ class DoctorRepository {
                 }
                 .decodeSingle<PrescriptionDto>()
 
+            try {
+                auditLogRepository.logEvent(
+                    action = "CREATE_PRESCRIPTION",
+                    entityType = "prescriptions",
+                    entityId = created.id,
+                    actorId = prescription.doctor_id
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(created)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd createPrescription: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -236,9 +286,19 @@ class DoctorRepository {
                     select()
                 }
                 .decodeSingle<AppointmentDto>()
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "CREATE_APPOINTMENT",
+                    entityType = "appointments",
+                    entityId = created.id,
+                    actorId = appointment.doctor_id
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(created)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd createAppointment: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -289,7 +349,6 @@ class DoctorRepository {
 
             Result.success(resultList)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd getAppointmentsForDoctor: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -304,9 +363,18 @@ class DoctorRepository {
                         eq("id", appointmentId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPDATE_APPOINTMENT_STATUS_${newStatus.uppercase()}",
+                    entityType = "appointments",
+                    entityId = appointmentId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("DoctorRepository", "Błąd updateAppointmentStatus: ${e.message}", e)
             Result.failure(e)
         }
     }

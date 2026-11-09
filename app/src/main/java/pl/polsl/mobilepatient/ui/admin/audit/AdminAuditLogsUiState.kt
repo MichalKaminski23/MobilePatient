@@ -25,13 +25,13 @@ data class AdminAuditLogsUiState(
         get() = logs.filter { log ->
             val matchesFilter = when (selectedFilter) {
                 AuditFilter.ALL -> true
-                AuditFilter.MEDICAL_RECORDS -> log.entity_type == "medical_records"
+                AuditFilter.MEDICAL_RECORDS -> log.entity_type in listOf("medical_records", "medical_files")
                 AuditFilter.PRESCRIPTIONS -> log.entity_type == "prescriptions"
                 AuditFilter.APPOINTMENTS -> log.entity_type == "appointments"
                 AuditFilter.CLINICS -> log.entity_type == "clinics"
                 AuditFilter.PROFILES -> log.entity_type == "profiles"
                 AuditFilter.OTHER -> log.entity_type !in listOf(
-                    "medical_records", "prescriptions", "appointments", "clinics", "profiles"
+                    "medical_records", "medical_files", "prescriptions", "appointments", "clinics", "profiles"
                 )
             }
 

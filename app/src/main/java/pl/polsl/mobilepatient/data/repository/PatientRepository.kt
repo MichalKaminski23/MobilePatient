@@ -17,8 +17,8 @@ import kotlin.time.Duration.Companion.hours
 class PatientRepository {
 
     private val client = SupabaseProvider.client
-
     private val userRepository = UserRepository()
+    private val auditLogRepository = AuditLogRepository()
 
     suspend fun getCurrentUserId(): String? {
         return userRepository.getCurrentUserId()
@@ -78,6 +78,16 @@ class PatientRepository {
                         eq("patient_id", userId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "FULFILL_PRESCRIPTION",
+                    entityType = "prescriptions",
+                    entityId = prescriptionId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -156,6 +166,16 @@ class PatientRepository {
                     }
                 }
 
+            try {
+                auditLogRepository.logEvent(
+                    action = "DELETE_FILE",
+                    entityType = "medical_files",
+                    entityId = fileId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -193,6 +213,16 @@ class PatientRepository {
                     select()
                 }
                 .decodeSingle<MedicalFileDto>()
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "UPLOAD_FILE",
+                    entityType = "medical_files",
+                    entityId = inserted.id,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
 
             val signedUrl = try {
                 bucket.createSignedUrl(path = storagePath, expiresIn = 24.hours)
@@ -283,6 +313,17 @@ class PatientRepository {
                     select()
                 }
                 .decodeSingle<AppointmentDto>()
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "BOOK_APPOINTMENT",
+                    entityType = "appointments",
+                    entityId = inserted.id,
+                    actorId = appointment.patient_id
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(inserted)
         } catch (e: Exception) {
             Result.failure(e)
@@ -303,6 +344,17 @@ class PatientRepository {
                         eq("patient_id", userId)
                     }
                 }
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "CANCEL_APPOINTMENT",
+                    entityType = "appointments",
+                    entityId = appointmentId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

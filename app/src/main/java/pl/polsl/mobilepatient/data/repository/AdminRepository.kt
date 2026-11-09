@@ -11,13 +11,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import pl.polsl.mobilepatient.BuildConfig
 import pl.polsl.mobilepatient.data.dto.AuditLogDto
-import pl.polsl.mobilepatient.data.dto.AuditLogInsertDto
 import pl.polsl.mobilepatient.data.dto.AuditLogWithActor
 import pl.polsl.mobilepatient.data.dto.ClinicDto
 import pl.polsl.mobilepatient.data.dto.ClinicInsertDto
 import pl.polsl.mobilepatient.data.dto.ProfileDto
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
-import java.util.UUID
 
 class AdminRepository(
     private val client: SupabaseClient = SupabaseProvider.client
@@ -27,6 +25,8 @@ class AdminRepository(
     suspend fun getCurrentUserId(): String? {
         return userRepository.getCurrentUserId()
     }
+
+    private val auditLogRepository = AuditLogRepository()
 
     suspend fun getClinics(): Result<List<ClinicDto>> {
         return try {
@@ -49,7 +49,7 @@ class AdminRepository(
                 .decodeSingle<ClinicDto>()
 
             try {
-                logAuditEvent(
+                auditLogRepository.logEvent(
                     action = "ADD_CLINIC",
                     entityType = "clinics",
                     entityId = inserted.id
@@ -73,7 +73,7 @@ class AdminRepository(
                 }
 
             try {
-                logAuditEvent(
+                auditLogRepository.logEvent(
                     action = "DELETE_CLINIC",
                     entityType = "clinics",
                     entityId = clinicId
@@ -131,30 +131,6 @@ class AdminRepository(
         }
     }
 
-    suspend fun logAuditEvent(
-        action: String,
-        entityType: String,
-        entityId: String? = null
-    ): Result<AuditLogDto> {
-        return try {
-            val actorId = getCurrentUserId()
-            val validEntityId = if (isValidUuid(entityId)) entityId else null
-            val insert = AuditLogInsertDto(
-                actor_id = actorId,
-                action = action,
-                entity_type = entityType,
-                entity_id = validEntityId
-            )
-            val created = client.from("audit_logs")
-                .insert(insert) {
-                    select()
-                }
-                .decodeSingle<AuditLogDto>()
-            Result.success(created)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     suspend fun getUsers(): Result<List<ProfileDto>> {
         return try {
@@ -189,7 +165,7 @@ class AdminRepository(
                 }
 
             try {
-                logAuditEvent(
+                auditLogRepository.logEvent(
                     action = "UPDATE_ROLE_${newRole.uppercase()}",
                     entityType = "profiles",
                     entityId = userId
@@ -245,16 +221,11 @@ class AdminRepository(
                             eq("id", newUserId)
                         }
                     }
-            } catch (e: Exception) {
-                android.util.Log.w(
-                    "AdminRepo",
-                    "Aktualizacja dodatkowych pól profilu lekarza nie powiodła się",
-                    e
-                )
+            } catch (_: Exception) {
             }
 
             try {
-                logAuditEvent(
+                auditLogRepository.logEvent(
                     action = "CREATE_DOCTOR",
                     entityType = "profiles",
                     entityId = newUserId
@@ -296,15 +267,6 @@ class AdminRepository(
                 tempClient.close()
             } catch (_: Exception) {
             }
-        }
-    }
-
-    private fun isValidUuid(str: String?): Boolean {
-        return !str.isNullOrBlank() && try {
-            UUID.fromString(str)
-            true
-        } catch (_: Exception) {
-            false
         }
     }
 }
