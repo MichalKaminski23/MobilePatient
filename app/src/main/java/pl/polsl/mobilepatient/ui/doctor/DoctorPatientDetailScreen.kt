@@ -59,6 +59,7 @@ fun DoctorPatientDetailScreen(
     onAddRecordClick: () -> Unit,
     onIssuePrescriptionClick: () -> Unit,
     onAddAppointmentClick: () -> Unit,
+    onOpenScansClick: () -> Unit,
     onEditRecordClick: (record: MedicalRecordDto) -> Unit,
     onDeleteRecordClick: (recordId: String) -> Unit
 ) {
@@ -196,18 +197,37 @@ fun DoctorPatientDetailScreen(
                                 }
                             }
 
-                            OutlinedButton(
-                                onClick = onAddAppointmentClick,
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.CalendarMonth,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Zaplanuj wizytę", style = MaterialTheme.typography.labelMedium)
+                                OutlinedButton(
+                                    onClick = onAddAppointmentClick,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Wizyta", style = MaterialTheme.typography.labelMedium)
+                                }
+
+                                OutlinedButton(
+                                    onClick = onOpenScansClick,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Description,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Skany / pliki", style = MaterialTheme.typography.labelMedium)
+                                }
                             }
                         }
                     }

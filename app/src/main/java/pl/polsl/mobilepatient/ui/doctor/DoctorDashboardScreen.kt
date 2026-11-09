@@ -69,6 +69,7 @@ import pl.polsl.mobilepatient.ui.doctor.components.AddMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.AddPatientDialog
 import pl.polsl.mobilepatient.ui.doctor.components.EditMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.IssuePrescriptionDialog
+import pl.polsl.mobilepatient.ui.doctor.scans.DoctorPatientScansScreen
 import pl.polsl.mobilepatient.ui.map.ClinicsMapScreen
 import pl.polsl.mobilepatient.ui.settings.SettingsScreen
 
@@ -92,16 +93,21 @@ fun DoctorDashboardScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var currentDestination by remember { mutableStateOf(DoctorDestination.OVERVIEW) }
+    var showPatientScansScreen by remember { mutableStateOf(false) }
 
     var patientForAddRecord by remember { mutableStateOf<ProfileDto?>(null) }
     var patientForIssuePrescription by remember { mutableStateOf<ProfileDto?>(null) }
 
-    BackHandler(enabled = currentDestination != DoctorDestination.OVERVIEW || (uiState is DoctorUiState.Success && (uiState as DoctorUiState.Success).selectedPatient != null)) {
-        val state = uiState as? DoctorUiState.Success
-        if (state?.selectedPatient != null) {
-            viewModel.clearSelectedPatient()
+    BackHandler(enabled = currentDestination != DoctorDestination.OVERVIEW || showPatientScansScreen || (uiState is DoctorUiState.Success && (uiState as DoctorUiState.Success).selectedPatient != null)) {
+        if (showPatientScansScreen) {
+            showPatientScansScreen = false
         } else {
-            currentDestination = DoctorDestination.OVERVIEW
+            val state = uiState as? DoctorUiState.Success
+            if (state?.selectedPatient != null) {
+                viewModel.clearSelectedPatient()
+            } else {
+                currentDestination = DoctorDestination.OVERVIEW
+            }
         }
     }
 
@@ -150,19 +156,32 @@ fun DoctorDashboardScreen(
 
         is DoctorUiState.Success -> {
             if (state.selectedPatient != null) {
-                DoctorPatientDetailScreen(
-                    patient = state.selectedPatient,
-                    records = state.medicalRecords,
-                    prescriptions = state.prescriptions,
-                    onBack = { viewModel.clearSelectedPatient() },
-                    onAddRecordClick = { patientForAddRecord = state.selectedPatient },
-                    onIssuePrescriptionClick = {
-                        patientForIssuePrescription = state.selectedPatient
-                    },
-                    onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
-                    onEditRecordClick = { viewModel.setRecordToEdit(it) },
-                    onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
-                )
+                if (showPatientScansScreen) {
+                    DoctorPatientScansScreen(
+                        patientName = "${state.selectedPatient.first_name} ${state.selectedPatient.last_name}",
+                        patientId = state.selectedPatient.id,
+                        doctorId = state.doctorId,
+                        onBack = { showPatientScansScreen = false }
+                    )
+                } else {
+                    DoctorPatientDetailScreen(
+                        patient = state.selectedPatient,
+                        records = state.medicalRecords,
+                        prescriptions = state.prescriptions,
+                        onBack = {
+                            showPatientScansScreen = false
+                            viewModel.clearSelectedPatient()
+                        },
+                        onAddRecordClick = { patientForAddRecord = state.selectedPatient },
+                        onIssuePrescriptionClick = {
+                            patientForIssuePrescription = state.selectedPatient
+                        },
+                        onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
+                        onOpenScansClick = { showPatientScansScreen = true },
+                        onEditRecordClick = { viewModel.setRecordToEdit(it) },
+                        onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
+                    )
+                }
             } else {
                 AnimatedContent(
                     targetState = currentDestination,
