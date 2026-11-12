@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.patient.components
+package pl.polsl.mobilepatient.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,23 +35,24 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun ConfirmActionDialog(
-    icon: ImageVector,
-    iconTint: Color,
-    iconContainerColor: Color,
     title: String,
     message: String,
     confirmText: String,
-    confirmButtonColor: Color,
-    dismissText: String = "Anuluj",
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Default.Warning,
+    iconTint: Color = MaterialTheme.colorScheme.error,
+    iconContainerColor: Color = MaterialTheme.colorScheme.errorContainer,
+    confirmButtonColor: Color = MaterialTheme.colorScheme.error,
+    dismissText: String = "Anuluj",
 ) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Card(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth(0.92f)
                 .padding(vertical = 16.dp),
             shape = RoundedCornerShape(24.dp),
@@ -88,9 +91,10 @@ fun ConfirmActionDialog(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = message,
@@ -110,7 +114,10 @@ fun ConfirmActionDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text(dismissText, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = dismissText,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
 
                     Button(
@@ -121,7 +128,10 @@ fun ConfirmActionDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text(confirmText, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = confirmText,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
                 }
             }

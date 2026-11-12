@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,10 +85,10 @@ fun BookAppointmentDialog(
     var errorText by remember { mutableStateOf<String?>(null) }
 
     val times = listOf(
-        "8:00",
+        "08:00",
         "08:30",
-        "9:00",
-        "9:30",
+        "09:00",
+        "09:30",
         "10:00",
         "10:30",
         "11:00",
@@ -99,7 +101,7 @@ fun BookAppointmentDialog(
         "14:30",
         "15:00",
         "15:30",
-        "16:30"
+        "16:00"
     )
     val quickDays = listOf(
         "Jutro" to today.plusDays(1).format(formatter),
@@ -113,7 +115,7 @@ fun BookAppointmentDialog(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
+                .fillMaxWidth(0.94f)
                 .heightIn(max = 680.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
@@ -185,7 +187,7 @@ fun BookAppointmentDialog(
                         .fillMaxWidth()
                         .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Surface(
                         shape = RoundedCornerShape(16.dp),
@@ -290,7 +292,8 @@ fun BookAppointmentDialog(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 OutlinedTextField(
-                                    value = if (selectedDoctor != null) "dr ${selectedDoctor!!.first_name} ${selectedDoctor!!.last_name}" else "Brak lekarzy w bazie",
+                                    value = selectedDoctor?.let { "dr ${it.first_name} ${it.last_name}" }
+                                        ?: "Brak dostępnych lekarzy",
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = {
@@ -313,7 +316,7 @@ fun BookAppointmentDialog(
                                             text = {
                                                 Text(
                                                     "dr ${doctor.first_name} ${doctor.last_name}",
-                                                    fontWeight = FontWeight.Medium
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             },
                                             onClick = {
@@ -350,7 +353,7 @@ fun BookAppointmentDialog(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -364,7 +367,8 @@ fun BookAppointmentDialog(
                                         label = {
                                             Text(
                                                 label,
-                                                style = MaterialTheme.typography.labelSmall
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                             )
                                         },
                                         shape = RoundedCornerShape(8.dp),
@@ -376,7 +380,7 @@ fun BookAppointmentDialog(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             OutlinedTextField(
                                 value = dateString,
@@ -387,7 +391,7 @@ fun BookAppointmentDialog(
                                 shape = RoundedCornerShape(12.dp),
                             )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -406,41 +410,32 @@ fun BookAppointmentDialog(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            Row(
+                            FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                times.take(3).forEach { time ->
+                                times.forEach { time ->
+                                    val isSelected = selectedTime == time
                                     FilterChip(
-                                        selected = selectedTime == time,
+                                        selected = isSelected,
                                         onClick = { selectedTime = time },
                                         label = {
                                             Text(
-                                                time,
-                                                style = MaterialTheme.typography.labelSmall
+                                                text = time,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                maxLines = 1,
+                                                softWrap = false
                                             )
                                         },
                                         shape = RoundedCornerShape(8.dp),
-                                    )
-                                }
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                times.drop(3).forEach { time ->
-                                    FilterChip(
-                                        selected = selectedTime == time,
-                                        onClick = { selectedTime = time },
-                                        label = {
-                                            Text(
-                                                time,
-                                                style = MaterialTheme.typography.labelSmall
-                                            )
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                        )
                                     )
                                 }
                             }
@@ -497,15 +492,19 @@ fun BookAppointmentDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
                         enabled = !isLoading,
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
                     ) {
-                        Text("Anuluj")
+                        Text("Anuluj", fontWeight = FontWeight.SemiBold)
                     }
 
                     Button(
@@ -533,7 +532,10 @@ fun BookAppointmentDialog(
                         },
                         enabled = !isLoading && (selectedClinic != null) && (selectedDoctor != null),
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1.4f)
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp)
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -542,7 +544,7 @@ fun BookAppointmentDialog(
                                 color = MaterialTheme.colorScheme.onPrimary,
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Rezerwacja...")
+                            Text("Rezerwacja...", fontWeight = FontWeight.SemiBold)
                         } else {
                             Icon(
                                 Icons.Default.Check,
@@ -550,7 +552,7 @@ fun BookAppointmentDialog(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Zarezerwuj wizytę")
+                            Text("Zarezerwuj wizytę", fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }

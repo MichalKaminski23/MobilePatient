@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -43,6 +42,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import pl.polsl.mobilepatient.ui.components.ConfirmActionDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -97,38 +97,19 @@ fun AdminClinicsScreen(
         )
     }
 
-    if (clinicToDelete != null) {
-        val clinic = clinicToDelete!!
-        AlertDialog(
-            onDismissRequest = { clinicToDelete = null },
-            title = {
-                Text(
-                    text = "Usunięcie placówki",
-                    fontWeight = FontWeight.Bold
-                )
+    clinicToDelete?.let { clinic ->
+        ConfirmActionDialog(
+            title = "Usunąć placówkę medyczną?",
+            message = "Czy na pewno chcesz usunąć placówkę „${clinic.name}”?\n\nUwaga: operacja nie powiedzie się, jeśli do placówki przypisane są zaplanowane lub historyczne wizyty.",
+            confirmText = "Usuń placówkę",
+            confirmButtonColor = MaterialTheme.colorScheme.error,
+            dismissText = "Anuluj",
+            onConfirm = {
+                val id = clinic.id
+                clinicToDelete = null
+                viewModel.deleteClinic(id)
             },
-            text = {
-                Text(
-                    text = "Czy na pewno chcesz usunąć placówkę „${clinic.name}”?\n\nUwaga: operacja nie powiedzie się, jeśli do placówki przypisane są zaplanowane lub historyczne wizyty.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteClinic(clinic.id)
-                        clinicToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Usuń")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { clinicToDelete = null }) {
-                    Text("Anuluj")
-                }
-            }
+            onDismiss = { clinicToDelete = null }
         )
     }
 

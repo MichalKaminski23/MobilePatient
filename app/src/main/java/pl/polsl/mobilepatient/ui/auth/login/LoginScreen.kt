@@ -39,6 +39,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,7 +53,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
 import pl.polsl.mobilepatient.ui.components.ChangePasswordDialog
@@ -71,7 +71,7 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
-    var email by remember { mutableStateOf("admin@test.pl") } // pamiętać aby usunąć i zostawić puste LUB lekarz@test.pl
+    var email by remember { mutableStateOf("pacjent@test.pl") } // pamiętać aby usunąć i zostawić puste
     var password by remember { mutableStateOf("test123!") } // pamiętać aby usunąć i zostawić puste
     var isPasswordVisible by remember { mutableStateOf(false) }
     var forcedPasswordChangeTarget by remember { mutableStateOf<LoginUiState.Success?>(null) }
