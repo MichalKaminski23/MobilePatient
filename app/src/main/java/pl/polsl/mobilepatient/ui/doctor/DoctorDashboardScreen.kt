@@ -101,7 +101,9 @@ fun DoctorDashboardScreen(
 
     BackHandler(enabled = true) {
         val state = uiState as? DoctorUiState.Success
-        if (state?.selectedPatient != null) {
+        if (showPatientScansScreen) {
+            showPatientScansScreen = false
+        } else if (state?.selectedPatient != null) {
             viewModel.clearSelectedPatient()
         } else if (currentDestination != DoctorDestination.OVERVIEW) {
             currentDestination = DoctorDestination.OVERVIEW
@@ -119,6 +121,9 @@ fun DoctorDashboardScreen(
 
     LaunchedEffect(uiState) {
         val state = uiState as? DoctorUiState.Success
+        if (state?.selectedPatient == null) {
+            showPatientScansScreen = false
+        }
         if (state?.actionSuccessMessage != null) {
             snackbarHostState.showSnackbar(state.actionSuccessMessage)
             viewModel.clearActionMessages()
@@ -159,19 +164,29 @@ fun DoctorDashboardScreen(
 
             is DoctorUiState.Success -> {
                 if (state.selectedPatient != null) {
-                    DoctorPatientDetailScreen(
-                        patient = state.selectedPatient,
-                        records = state.medicalRecords,
-                        prescriptions = state.prescriptions,
-                        onBack = { viewModel.clearSelectedPatient() },
-                        onAddRecordClick = { patientForAddRecord = state.selectedPatient },
-                        onIssuePrescriptionClick = {
-                            patientForIssuePrescription = state.selectedPatient
-                        },
-                        onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
-                        onEditRecordClick = { viewModel.setRecordToEdit(it) },
-                        onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
-                    )
+                    if (showPatientScansScreen) {
+                        DoctorPatientScansScreen(
+                            patientName = "${state.selectedPatient.first_name} ${state.selectedPatient.last_name}",
+                            patientId = state.selectedPatient.id,
+                            doctorId = state.doctorId,
+                            onBack = { showPatientScansScreen = false }
+                        )
+                    } else {
+                        DoctorPatientDetailScreen(
+                            patient = state.selectedPatient,
+                            records = state.medicalRecords,
+                            prescriptions = state.prescriptions,
+                            onBack = { viewModel.clearSelectedPatient() },
+                            onAddRecordClick = { patientForAddRecord = state.selectedPatient },
+                            onIssuePrescriptionClick = {
+                                patientForIssuePrescription = state.selectedPatient
+                            },
+                            onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
+                            onOpenScansClick = { showPatientScansScreen = true },
+                            onEditRecordClick = { viewModel.setRecordToEdit(it) },
+                            onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
+                        )
+                    }
                 } else {
                     AnimatedContent(
                         targetState = currentDestination,
