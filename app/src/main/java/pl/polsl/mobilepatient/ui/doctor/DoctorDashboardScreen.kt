@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.HealthAndSafety
@@ -38,6 +39,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -68,6 +70,7 @@ import pl.polsl.mobilepatient.ui.doctor.components.AddMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.AddPatientDialog
 import pl.polsl.mobilepatient.ui.doctor.components.EditMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.IssuePrescriptionDialog
+import pl.polsl.mobilepatient.ui.doctor.scans.DoctorPatientScansScreen
 import pl.polsl.mobilepatient.ui.map.ClinicsMapScreen
 import pl.polsl.mobilepatient.ui.settings.SettingsScreen
 
@@ -91,6 +94,7 @@ fun DoctorDashboardScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var currentDestination by remember { mutableStateOf(DoctorDestination.OVERVIEW) }
+    var showPatientScansScreen by remember { mutableStateOf(false) }
 
     var patientForAddRecord by remember { mutableStateOf<ProfileDto?>(null) }
     var patientForIssuePrescription by remember { mutableStateOf<ProfileDto?>(null) }
@@ -201,12 +205,11 @@ fun DoctorDashboardScreen(
                                     TopAppBar(
                                         title = { Text("Moi pacjenci", fontWeight = FontWeight.Bold) },
                                         navigationIcon = {
-                                            OutlinedButton(
-                                                onClick = { currentDestination = DoctorDestination.OVERVIEW },
-                                                modifier = Modifier.padding(start = 8.dp),
-                                                shape = RoundedCornerShape(8.dp)
-                                            ) {
-                                                Text("Wróć")
+                                            IconButton(onClick = { currentDestination = DoctorDestination.OVERVIEW }) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Powrót"
+                                                )
                                             }
                                         },
                                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -236,12 +239,11 @@ fun DoctorDashboardScreen(
                                     TopAppBar(
                                         title = { Text("Terminarz wizyt", fontWeight = FontWeight.Bold) },
                                         navigationIcon = {
-                                            OutlinedButton(
-                                                onClick = { currentDestination = DoctorDestination.OVERVIEW },
-                                                modifier = Modifier.padding(start = 8.dp),
-                                                shape = RoundedCornerShape(8.dp)
-                                            ) {
-                                                Text("Wróć")
+                                            IconButton(onClick = { currentDestination = DoctorDestination.OVERVIEW }) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                    contentDescription = "Powrót"
+                                                )
                                             }
                                         },
                                         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
