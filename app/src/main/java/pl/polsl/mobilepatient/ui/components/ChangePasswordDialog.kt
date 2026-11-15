@@ -261,8 +261,20 @@ fun ChangePasswordDialog(
                             errorMessage = "Wprowadź aktualne hasło."
                             return@Button
                         }
-                        if (newPassword.length < 6) {
-                            errorMessage = "Nowe hasło musi mieć co najmniej 6 znaków."
+                        if (newPassword.length < 8) {
+                            errorMessage = "Nowe hasło musi mieć co najmniej 8 znaków."
+                            return@Button
+                        }
+                        if (!newPassword.any { it.isDigit() }) {
+                            errorMessage = "Nowe hasło musi zawierać co najmniej jedną cyfrę."
+                            return@Button
+                        }
+                        if (!newPassword.any { it.isUpperCase() } || !newPassword.any { it.isLowerCase() }) {
+                            errorMessage = "Nowe hasło musi zawierać wielkie i małe litery."
+                            return@Button
+                        }
+                        if (!newPassword.any { !it.isLetterOrDigit() }) {
+                            errorMessage = "Nowe hasło musi zawierać znak specjalny (np. !@#$)."
                             return@Button
                         }
                         if (newPassword != confirmPassword) {

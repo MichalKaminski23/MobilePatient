@@ -14,6 +14,39 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    private val _hasSavedSession = MutableStateFlow(false)
+    val hasSavedSession: StateFlow<Boolean> = _hasSavedSession.asStateFlow()
+
+    fun checkSavedSession() {
+        viewModelScope.launch {
+            _hasSavedSession.value = authRepository.hasSavedSession()
+        }
+    }
+
+    fun signInWithBiometric() {
+        viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
+
+            val result = authRepository.signInWithBiometric()
+
+            _uiState.value = result.fold(
+                onSuccess = { profile ->
+                    LoginUiState.Success(
+                        role = profile.role,
+                        userName = "${profile.first_name} ${profile.last_name}",
+                        mustChangePassword = profile.must_change_password
+                    )
+                },
+                onFailure = { error ->
+                    _hasSavedSession.value = false
+                    LoginUiState.Error(
+                        error.localizedMessage ?: "Błąd uwierzytelnienia biometrycznego."
+                    )
+                }
+            )
+        }
+    }
+
     fun signIn(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
             _uiState.value =

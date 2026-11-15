@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
@@ -47,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -70,6 +72,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import pl.polsl.mobilepatient.notifications.NotificationHelper
+import pl.polsl.mobilepatient.data.security.BiometricAuthManager
 import pl.polsl.mobilepatient.ui.components.IconBadge
 import pl.polsl.mobilepatient.ui.theme.ThemeManager
 import pl.polsl.mobilepatient.ui.theme.ThemeMode
@@ -80,6 +83,13 @@ fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val themeMode by ThemeManager.themeMode.collectAsState()
+
+    var isBiometricEnabled by remember {
+        mutableStateOf(BiometricAuthManager.isBiometricEnabled(context))
+    }
+    val biometricStatus = remember {
+        BiometricAuthManager.getBiometricStatus(context)
+    }
 
     var cameraPermissionState by remember {
         mutableStateOf<Boolean?>(null)
@@ -264,6 +274,82 @@ fun SettingsScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconBadge(
+                            icon = Icons.Default.Fingerprint,
+                            tint = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Biometria i bezpieczeństwo",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Szybkie logowanie odciskiem palca",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Logowanie biometryczne",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = when (biometricStatus) {
+                                    BiometricAuthManager.BiometricStatus.READY ->
+                                        "Użyj odcisku palca, aby odblokować sesję"
+                                    BiometricAuthManager.BiometricStatus.NOT_ENROLLED ->
+                                        "Brak zarejestrowanego odcisku palca w systemie Android"
+                                    BiometricAuthManager.BiometricStatus.NO_HARDWARE ->
+                                        "To urządzenie nie posiada czytnika biometrycznego"
+                                    BiometricAuthManager.BiometricStatus.UNAVAILABLE ->
+                                        "Czytnik biometryczny jest obecnie niedostępny"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = isBiometricEnabled && biometricStatus == BiometricAuthManager.BiometricStatus.READY,
+                            onCheckedChange = { checked ->
+                                isBiometricEnabled = checked
+                                BiometricAuthManager.setBiometricEnabled(context, checked)
+                            },
+                            enabled = biometricStatus == BiometricAuthManager.BiometricStatus.READY
+                        )
                     }
                 }
             }

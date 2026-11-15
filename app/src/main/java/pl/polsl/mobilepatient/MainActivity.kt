@@ -3,13 +3,13 @@ package pl.polsl.mobilepatient
 import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.fragment.app.FragmentActivity
 import pl.polsl.mobilepatient.data.network.SupabaseProvider
 import pl.polsl.mobilepatient.notifications.NotificationHelper
 import pl.polsl.mobilepatient.ui.theme.ThemeManager
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SupabaseProvider.init(applicationContext)
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         val data = intent?.data ?: return null
         if (data.scheme == "medapp" && data.host == "patient") {
             val path = data.path?.trim('/')
-            return if (!path.isNull_or_empty()) {
+            return if (!path.isNullOrEmpty()) {
                 path
             } else {
                 data.pathSegments.lastOrNull()
@@ -43,5 +43,3 @@ class MainActivity : ComponentActivity() {
         return null
     }
 }
-
-private fun String?.isNull_or_empty(): Boolean = this == null || this.isBlank()

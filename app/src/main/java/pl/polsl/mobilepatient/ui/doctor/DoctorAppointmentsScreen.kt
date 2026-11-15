@@ -1,5 +1,6 @@
 package pl.polsl.mobilepatient.ui.doctor
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,11 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,11 +32,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pl.polsl.mobilepatient.data.dto.AppointmentWithPatientDto
+import pl.polsl.mobilepatient.ui.components.ConfirmActionDialog
+import pl.polsl.mobilepatient.ui.components.IconBadge
+import pl.polsl.mobilepatient.ui.patient.components.EmptyStateView
 
 @Composable
 fun DoctorAppointmentsScreen(
@@ -41,6 +51,24 @@ fun DoctorAppointmentsScreen(
     onUpdateStatus: (appointmentId: String, newStatus: String) -> Unit,
     onSelectPatient: (patientId: String) -> Unit
 ) {
+    var appointmentToCancel by remember { mutableStateOf<AppointmentWithPatientDto?>(null) }
+
+    appointmentToCancel?.let { appt ->
+        ConfirmActionDialog(
+            title = "Odwołać wizytę?",
+            message = "Czy na pewno chcesz odwołać wizytę pacjenta ${appt.patient_name ?: "Pacjent"} zaplanowaną na ${formatAppointmentDate(appt.scheduled_at)}?",
+            confirmText = "Odwołaj wizytę",
+            confirmButtonColor = MaterialTheme.colorScheme.error,
+            dismissText = "Wróć",
+            onConfirm = {
+                val id = appt.id
+                appointmentToCancel = null
+                onUpdateStatus(id, "cancelled")
+            },
+            onDismiss = { appointmentToCancel = null }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,32 +79,38 @@ fun DoctorAppointmentsScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 4.dp)
         ) {
-            Icon(
-                Icons.Default.CalendarMonth,
-                contentDescription = null,
+            IconBadge(
+                icon = Icons.Default.CalendarMonth,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp)
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                badgeSize = 36.dp,
+                iconSize = 20.dp
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Harmonogram zaplanowanych wizyt",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    text = "Harmonogram wizyt",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "Liczba zaplanowanych wizyt: ${appointments.size}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         if (appointments.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Brak zarejestrowanych wizyt w harmonogramie.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EmptyStateView(
+                    icon = Icons.Default.CalendarMonth,
+                    title = "Brak wizyt w terminarzu",
+                    description = "Nie masz obecnie zarejestrowanych żadnych wizyt w harmonogramie."
                 )
             }
         } else {
@@ -88,7 +122,8 @@ fun DoctorAppointmentsScreen(
                     AppointmentCardItem(
                         appointment = appointment,
                         onUpdateStatus = onUpdateStatus,
-                        onSelectPatient = { onSelectPatient(appointment.patient_id) }
+                        onSelectPatient = { onSelectPatient(appointment.patient_id) },
+                        onRequestCancel = { appointmentToCancel = appointment }
                     )
                 }
             }
@@ -100,12 +135,26 @@ fun DoctorAppointmentsScreen(
 private fun AppointmentCardItem(
     appointment: AppointmentWithPatientDto,
     onUpdateStatus: (appointmentId: String, newStatus: String) -> Unit,
-    onSelectPatient: () -> Unit
+    onSelectPatient: () -> Unit,
+    onRequestCancel: () -> Unit
 ) {
-    val (statusLabel, statusColor, statusContainer) = when (appointment.status) {
-        "completed" -> Triple("Zrealizowana", MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)
-        "cancelled" -> Triple("Anulowana", MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.errorContainer)
-        else -> Triple("Zaplanowana", MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.tertiaryContainer)
+    val statusLower = appointment.status.lowercase()
+    val (statusLabel, statusColor, statusBorder) = when (statusLower) {
+        "completed" -> Triple(
+            "ZREALIZOWANA",
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+        )
+        "cancelled" -> Triple(
+            "ODWOŁANA",
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+        )
+        else -> Triple(
+            "ZAPLANOWANA",
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+        )
     }
 
     Card(
@@ -129,7 +178,7 @@ private fun AppointmentCardItem(
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = formatAppointmentDate(appointment.scheduled_at),
                         style = MaterialTheme.typography.titleMedium,
@@ -140,19 +189,19 @@ private fun AppointmentCardItem(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = statusContainer
+                    color = statusColor,
+                    border = BorderStroke(1.dp, statusBorder)
                 ) {
                     Text(
                         text = statusLabel,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = statusColor,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -161,10 +210,10 @@ private fun AppointmentCardItem(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = appointment.patient_name ?: "Pacjent",
                     style = MaterialTheme.typography.bodyMedium,
@@ -173,16 +222,28 @@ private fun AppointmentCardItem(
                 )
             }
 
-            if (!appointment.notes.isNull_or_empty()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Uwagi: ${appointment.notes}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            if (!appointment.notes.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Notes,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = appointment.notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -194,48 +255,50 @@ private fun AppointmentCardItem(
                 ) {
                     OutlinedButton(
                         onClick = onSelectPatient,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Karta pacjenta", style = MaterialTheme.typography.labelSmall)
+                        Text("Karta pacjenta", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                     }
 
-                    if (appointment.status == "scheduled") {
-                        OutlinedButton(
+                    if (statusLower == "scheduled") {
+                        Button(
                             onClick = { onUpdateStatus(appointment.id, "completed") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.primary
-                            )
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Zrealizuj", style = MaterialTheme.typography.labelSmall)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Zrealizuj", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
 
-                if (appointment.status == "scheduled") {
+                if (statusLower == "scheduled") {
                     OutlinedButton(
-                        onClick = { onUpdateStatus(appointment.id, "cancelled") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        onClick = onRequestCancel,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(42.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
-                        )
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
                     ) {
                         Icon(Icons.Default.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Odwołaj wizytę", style = MaterialTheme.typography.labelSmall)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Odwołaj wizytę", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         }
     }
 }
-
-private fun String?.isNull_or_empty(): Boolean = this == null || this.isBlank()
 
 private fun formatAppointmentDate(scheduledAt: String): String {
     return try {

@@ -21,17 +21,33 @@ class EncryptedSessionManager(
         ignoreUnknownKeys = true
     }
 
-    private val masterKey: MasterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+    private val encryptedPrefs: SharedPreferences = try {
+        createPrefs(context)
+    } catch (_: Exception) {
+        context.getSharedPreferences("encrypted_supabase_session", Context.MODE_PRIVATE).edit { clear() }
+        createPrefs(context)
+    }
 
-    private val encryptedPrefs: SharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "encrypted_supabase_session",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private fun createPrefs(ctx: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(ctx)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        return EncryptedSharedPreferences.create(
+            ctx,
+            "encrypted_supabase_session",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
+    fun hasSession(): Boolean {
+        return try {
+            encryptedPrefs.getString(sessionKey, null) != null
+        } catch (_: Exception) {
+            false
+        }
+    }
 
     override suspend fun saveSession(session: UserSession) {
         val serialized = json.encodeToString(UserSession.serializer(), session)

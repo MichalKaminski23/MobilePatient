@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
@@ -68,6 +70,7 @@ import pl.polsl.mobilepatient.ui.components.IconBadge
 import pl.polsl.mobilepatient.ui.doctor.components.AddAppointmentDialog
 import pl.polsl.mobilepatient.ui.doctor.components.AddMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.AddPatientDialog
+import pl.polsl.mobilepatient.ui.doctor.components.DoctorProfileDialog
 import pl.polsl.mobilepatient.ui.doctor.components.EditMedicalRecordDialog
 import pl.polsl.mobilepatient.ui.doctor.components.IssuePrescriptionDialog
 import pl.polsl.mobilepatient.ui.doctor.scans.DoctorPatientScansScreen
@@ -80,6 +83,18 @@ enum class DoctorDestination {
     APPOINTMENTS,
     MAP,
     SETTINGS
+}
+
+private sealed class DoctorNavScreen {
+    data class Destination(val dest: DoctorDestination) : DoctorNavScreen()
+    data class PatientDetail(val patient: ProfileDto) : DoctorNavScreen()
+    data class PatientScans(val patient: ProfileDto) : DoctorNavScreen()
+}
+
+private fun getNavScreenDepth(screen: DoctorNavScreen): Int = when (screen) {
+    is DoctorNavScreen.Destination -> if (screen.dest == DoctorDestination.OVERVIEW) 0 else 1
+    is DoctorNavScreen.PatientDetail -> 2
+    is DoctorNavScreen.PatientScans -> 3
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -163,187 +178,250 @@ fun DoctorDashboardScreen(
             }
 
             is DoctorUiState.Success -> {
-                if (state.selectedPatient != null) {
-                    if (showPatientScansScreen) {
-                        DoctorPatientScansScreen(
-                            patientName = "${state.selectedPatient.first_name} ${state.selectedPatient.last_name}",
-                            patientId = state.selectedPatient.id,
-                            doctorId = state.doctorId,
-                            onBack = { showPatientScansScreen = false }
-                        )
-                    } else {
-                        DoctorPatientDetailScreen(
-                            patient = state.selectedPatient,
-                            records = state.medicalRecords,
-                            prescriptions = state.prescriptions,
-                            onBack = { viewModel.clearSelectedPatient() },
-                            onAddRecordClick = { patientForAddRecord = state.selectedPatient },
-                            onIssuePrescriptionClick = {
-                                patientForIssuePrescription = state.selectedPatient
-                            },
-                            onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
-                            onOpenScansClick = { showPatientScansScreen = true },
-                            onEditRecordClick = { viewModel.setRecordToEdit(it) },
-                            onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
-                        )
-                    }
-                } else {
-                    AnimatedContent(
-                        targetState = currentDestination,
-                        transitionSpec = {
-                            if (targetState != DoctorDestination.OVERVIEW) {
-                                (slideInHorizontally(initialOffsetX = { it }) + fadeIn(animationSpec = tween(220)))
-                                    .togetherWith(slideOutHorizontally(targetOffsetX = { -it / 4 }) + fadeOut(animationSpec = tween(220)))
-                            } else {
-                                (slideInHorizontally(initialOffsetX = { -it / 4 }) + fadeIn(animationSpec = tween(220)))
-                                    .togetherWith(slideOutHorizontally(targetOffsetX = { it }) + fadeOut(animationSpec = tween(220)))
+                val currentNavScreen: DoctorNavScreen = when {
+                    state.selectedPatient != null && showPatientScansScreen -> DoctorNavScreen.PatientScans(state.selectedPatient)
+                    state.selectedPatient != null -> DoctorNavScreen.PatientDetail(state.selectedPatient)
+                    else -> DoctorNavScreen.Destination(currentDestination)
+                }
+
+                AnimatedContent(
+                    targetState = currentNavScreen,
+                    transitionSpec = {
+                        val initialDepth = getNavScreenDepth(initialState)
+                        val targetDepth = getNavScreenDepth(targetState)
+                        if (targetDepth >= initialDepth) {
+                            (slideInHorizontally(initialOffsetX = { it }) + fadeIn(
+                                animationSpec = tween(220)
+                            ))
+                                .togetherWith(
+                                    slideOutHorizontally(targetOffsetX = { -it / 4 }) + fadeOut(
+                                        animationSpec = tween(220)
+                                    )
+                                )
+                        } else {
+                            (slideInHorizontally(initialOffsetX = { -it / 4 }) + fadeIn(
+                                animationSpec = tween(220)
+                            ))
+                                .togetherWith(
+                                    slideOutHorizontally(targetOffsetX = { it }) + fadeOut(
+                                        animationSpec = tween(220)
+                                    )
+                                )
+                        }
+                    },
+                    label = "DoctorNavTransition"
+                ) { navScreen ->
+                    when (navScreen) {
+                        is DoctorNavScreen.Destination -> {
+                            when (navScreen.dest) {
+                                DoctorDestination.OVERVIEW -> {
+                                    DashboardOverview(
+                                        doctorName = userName,
+                                        onOpenPatients = {
+                                            currentDestination = DoctorDestination.PATIENTS
+                                        },
+                                        onOpenAppointments = {
+                                            currentDestination = DoctorDestination.APPOINTMENTS
+                                        },
+                                        onOpenMap = { currentDestination = DoctorDestination.MAP },
+                                        onOpenSettings = {
+                                            currentDestination = DoctorDestination.SETTINGS
+                                        },
+                                        onLogout = onLogout
+                                    )
+                                }
+
+                                DoctorDestination.PATIENTS -> {
+                                    Scaffold(
+                                        snackbarHost = { SnackbarHost(snackbarHostState) },
+                                        topBar = {
+                                            TopAppBar(
+                                                title = {
+                                                    Text(
+                                                        text = "Moi pacjenci",
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onBackground
+                                                    )
+                                                },
+                                                navigationIcon = {
+                                                    IconButton(onClick = {
+                                                        currentDestination = DoctorDestination.OVERVIEW
+                                                    }) {
+                                                        Icon(
+                                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                            contentDescription = "Powrót",
+                                                            tint = MaterialTheme.colorScheme.onBackground
+                                                        )
+                                                    }
+                                                },
+                                                colors = TopAppBarDefaults.topAppBarColors(
+                                                    containerColor = MaterialTheme.colorScheme.background,
+                                                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                                                )
+                                            )
+                                        },
+                                        containerColor = MaterialTheme.colorScheme.background
+                                    ) { inner ->
+                                        Box(modifier = Modifier.padding(inner)) {
+                                            DoctorPatientListScreen(
+                                                patients = state.patients,
+                                                searchQuery = state.searchQuery,
+                                                onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                                                onSelectPatient = { viewModel.selectPatient(it) },
+                                                onOpenAddRecordDialog = { patientForAddRecord = it },
+                                                onOpenIssuePrescriptionDialog = {
+                                                    patientForIssuePrescription = it
+                                                },
+                                                onOpenAddPatientDialog = { viewModel.openAddPatientDialog() },
+                                                onRemovePatient = { viewModel.removeAssignedPatient(it) }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                DoctorDestination.APPOINTMENTS -> {
+                                    Scaffold(
+                                        snackbarHost = { SnackbarHost(snackbarHostState) },
+                                        topBar = {
+                                            TopAppBar(
+                                                title = {
+                                                    Text(
+                                                        text = "Terminarz wizyt",
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onBackground
+                                                    )
+                                                },
+                                                navigationIcon = {
+                                                    IconButton(onClick = {
+                                                        currentDestination = DoctorDestination.OVERVIEW
+                                                    }) {
+                                                        Icon(
+                                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                            contentDescription = "Powrót",
+                                                            tint = MaterialTheme.colorScheme.onBackground
+                                                        )
+                                                    }
+                                                },
+                                                colors = TopAppBarDefaults.topAppBarColors(
+                                                    containerColor = MaterialTheme.colorScheme.background,
+                                                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                                                )
+                                            )
+                                        },
+                                        containerColor = MaterialTheme.colorScheme.background
+                                    ) { inner ->
+                                        Box(modifier = Modifier.padding(inner)) {
+                                            DoctorAppointmentsScreen(
+                                                appointments = state.appointments,
+                                                onUpdateStatus = { apptId, newStatus ->
+                                                    viewModel.updateAppointmentStatus(apptId, newStatus)
+                                                },
+                                                onSelectPatient = { viewModel.selectPatient(it) }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                DoctorDestination.MAP -> {
+                                    ClinicsMapScreen(onBack = {
+                                        currentDestination = DoctorDestination.OVERVIEW
+                                    })
+                                }
+
+                                DoctorDestination.SETTINGS -> {
+                                    SettingsScreen(onBack = {
+                                        currentDestination = DoctorDestination.OVERVIEW
+                                    })
+                                }
                             }
-                        },
-                        label = "DoctorDestinationTransition"
-                    ) { destination ->
-                    when (destination) {
-                        DoctorDestination.OVERVIEW -> {
-                            DashboardOverview(
-                                doctorName = userName,
-                                onOpenPatients = { currentDestination = DoctorDestination.PATIENTS },
-                                onOpenAppointments = { currentDestination = DoctorDestination.APPOINTMENTS },
-                                onOpenMap = { currentDestination = DoctorDestination.MAP },
-                                onOpenSettings = { currentDestination = DoctorDestination.SETTINGS },
-                                onLogout = onLogout
+                        }
+
+                        is DoctorNavScreen.PatientDetail -> {
+                            DoctorPatientDetailScreen(
+                                patient = navScreen.patient,
+                                records = state.medicalRecords,
+                                prescriptions = state.prescriptions,
+                                onBack = { viewModel.clearSelectedPatient() },
+                                onAddRecordClick = { patientForAddRecord = navScreen.patient },
+                                onIssuePrescriptionClick = {
+                                    patientForIssuePrescription = navScreen.patient
+                                },
+                                onAddAppointmentClick = { viewModel.openAddAppointmentDialog() },
+                                onOpenScansClick = { showPatientScansScreen = true },
+                                onEditRecordClick = { viewModel.setRecordToEdit(it) },
+                                onDeleteRecordClick = { viewModel.deleteMedicalRecord(it) }
                             )
                         }
 
-                        DoctorDestination.PATIENTS -> {
-                            Scaffold(
-                                snackbarHost = { SnackbarHost(snackbarHostState) },
-                                topBar = {
-                                    TopAppBar(
-                                        title = { Text("Moi pacjenci", fontWeight = FontWeight.Bold) },
-                                        navigationIcon = {
-                                            IconButton(onClick = { currentDestination = DoctorDestination.OVERVIEW }) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = "Powrót"
-                                                )
-                                            }
-                                        },
-                                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-                                    )
-                                },
-                                containerColor = MaterialTheme.colorScheme.background
-                            ) { inner ->
-                                Box(modifier = Modifier.padding(inner)) {
-                                    DoctorPatientListScreen(
-                                        patients = state.patients,
-                                        searchQuery = state.searchQuery,
-                                        onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                                        onSelectPatient = { viewModel.selectPatient(it) },
-                                        onOpenAddRecordDialog = { patientForAddRecord = it },
-                                        onOpenIssuePrescriptionDialog = { patientForIssuePrescription = it },
-                                        onOpenAddPatientDialog = { viewModel.openAddPatientDialog() },
-                                        onRemovePatient = { viewModel.removeAssignedPatient(it) }
-                                    )
-                                }
-                            }
-                        }
-
-                        DoctorDestination.APPOINTMENTS -> {
-                            Scaffold(
-                                snackbarHost = { SnackbarHost(snackbarHostState) },
-                                topBar = {
-                                    TopAppBar(
-                                        title = { Text("Terminarz wizyt", fontWeight = FontWeight.Bold) },
-                                        navigationIcon = {
-                                            IconButton(onClick = { currentDestination = DoctorDestination.OVERVIEW }) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                    contentDescription = "Powrót"
-                                                )
-                                            }
-                                        },
-                                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-                                    )
-                                },
-                                containerColor = MaterialTheme.colorScheme.background
-                            ) { inner ->
-                                Box(modifier = Modifier.padding(inner)) {
-                                    DoctorAppointmentsScreen(
-                                        appointments = state.appointments,
-                                        onUpdateStatus = { apptId, newStatus ->
-                                            viewModel.updateAppointmentStatus(apptId, newStatus)
-                                        },
-                                        onSelectPatient = { viewModel.selectPatient(it) }
-                                    )
-                                }
-                            }
-                        }
-
-                        DoctorDestination.MAP -> {
-                            ClinicsMapScreen(onBack = { currentDestination = DoctorDestination.OVERVIEW })
-                        }
-
-                        DoctorDestination.SETTINGS -> {
-                            SettingsScreen(onBack = { currentDestination = DoctorDestination.OVERVIEW })
+                        is DoctorNavScreen.PatientScans -> {
+                            DoctorPatientScansScreen(
+                                patientName = "${navScreen.patient.first_name} ${navScreen.patient.last_name}",
+                                patientId = navScreen.patient.id,
+                                doctorId = state.doctorId,
+                                onBack = { showPatientScansScreen = false }
+                            )
                         }
                     }
                 }
-            }
 
-            if (state.showAddPatientDialog) {
-                AddPatientDialog(
-                    availablePatients = state.availablePatients,
-                    onDismiss = { viewModel.closeAddPatientDialog() },
-                    onAssignPatient = { patientId -> viewModel.assignPatient(patientId) }
-                )
-            }
+                if (state.showAddPatientDialog) {
+                    AddPatientDialog(
+                        availablePatients = state.availablePatients,
+                        onDismiss = { viewModel.closeAddPatientDialog() },
+                        onAssignPatient = { patientId -> viewModel.assignPatient(patientId) }
+                    )
+                }
 
-            if (state.showAddAppointmentDialog) {
-                AddAppointmentDialog(
-                    patientName = state.selectedPatient?.let { "${it.first_name} ${it.last_name}" } ?: "Pacjent",
-                    clinics = state.clinics,
-                    onDismiss = { viewModel.closeAddAppointmentDialog() },
-                    onSubmit = { clinicId, scheduledAt, notes ->
-                        viewModel.createAppointment(clinicId, scheduledAt, notes)
-                    }
-                )
-            }
+                if (state.showAddAppointmentDialog) {
+                    AddAppointmentDialog(
+                        patientName = state.selectedPatient?.let { "${it.first_name} ${it.last_name}" }
+                            ?: "Pacjent",
+                        clinics = state.clinics,
+                        onDismiss = { viewModel.closeAddAppointmentDialog() },
+                        onSubmit = { clinicId, scheduledAt, notes ->
+                            viewModel.createAppointment(clinicId, scheduledAt, notes)
+                        }
+                    )
+                }
 
-            state.recordToEdit?.let { record ->
-                EditMedicalRecordDialog(
-                    record = record,
-                    onDismiss = { viewModel.setRecordToEdit(null) },
-                    onSubmit = { newDesc ->
-                        viewModel.updateMedicalRecord(record.id, newDesc)
-                    }
-                )
-            }
+                state.recordToEdit?.let { record ->
+                    EditMedicalRecordDialog(
+                        record = record,
+                        onDismiss = { viewModel.setRecordToEdit(null) },
+                        onSubmit = { newDesc ->
+                            viewModel.updateMedicalRecord(record.id, newDesc)
+                        }
+                    )
+                }
 
-            patientForAddRecord?.let { patient ->
-                AddMedicalRecordDialog(
-                    patientName = "${patient.first_name} ${patient.last_name}",
-                    isLoading = state.isAddingRecordLoading,
-                    onDismiss = { patientForAddRecord = null },
-                    onSubmit = { recordType, description ->
-                        viewModel.addMedicalRecord(patient.id, recordType, description)
-                        patientForAddRecord = null
-                    }
-                )
-            }
+                patientForAddRecord?.let { patient ->
+                    AddMedicalRecordDialog(
+                        patientName = "${patient.first_name} ${patient.last_name}",
+                        isLoading = state.isAddingRecordLoading,
+                        onDismiss = { patientForAddRecord = null },
+                        onSubmit = { recordType, description ->
+                            viewModel.addMedicalRecord(patient.id, recordType, description)
+                            patientForAddRecord = null
+                        }
+                    )
+                }
 
-            patientForIssuePrescription?.let { patient ->
-                IssuePrescriptionDialog(
-                    patientName = "${patient.first_name} ${patient.last_name}",
-                    isLoading = state.isIssuingPrescriptionLoading,
-                    onDismiss = { patientForIssuePrescription = null },
-                    onSubmit = { medications, validDays ->
-                        viewModel.issuePrescription(patient.id, medications, validDays)
-                        patientForIssuePrescription = null
-                    }
-                )
+                patientForIssuePrescription?.let { patient ->
+                    IssuePrescriptionDialog(
+                        patientName = "${patient.first_name} ${patient.last_name}",
+                        isLoading = state.isIssuingPrescriptionLoading,
+                        onDismiss = { patientForIssuePrescription = null },
+                        onSubmit = { medications, validDays ->
+                            viewModel.issuePrescription(patient.id, medications, validDays)
+                            patientForIssuePrescription = null
+                        }
+                    )
+                }
             }
         }
     }
-}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -395,6 +473,16 @@ private fun DashboardOverview(
         )
     )
 
+    var showProfileDialog by remember { mutableStateOf(false) }
+
+    if (showProfileDialog) {
+        DoctorProfileDialog(
+            initialUserName = doctorName,
+            initialRole = "doctor",
+            onDismiss = { showProfileDialog = false }
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -410,7 +498,7 @@ private fun DashboardOverview(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Gabinet Lekarza",
+                            text = "Mobilny Pacjent",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
@@ -433,7 +521,9 @@ private fun DashboardOverview(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showProfileDialog = true },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -473,19 +563,23 @@ private fun DashboardOverview(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(3.dp))
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "ROLA: LEKARZ",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                text = "Pokaż dane",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
+
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "Profil lekarza",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 

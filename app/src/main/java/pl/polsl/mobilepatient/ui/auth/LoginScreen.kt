@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.auth.login
+package pl.polsl.mobilepatient.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -30,6 +32,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -44,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -52,9 +56,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
+import pl.polsl.mobilepatient.data.security.BiometricAuthManager
+import pl.polsl.mobilepatient.ui.auth.login.LoginUiState
+import pl.polsl.mobilepatient.ui.auth.login.LoginViewModel
 import pl.polsl.mobilepatient.ui.components.ChangePasswordDialog
 
 @Composable
@@ -68,13 +76,21 @@ fun LoginScreen(
         )
     }
     val uiState by viewModel.uiState.collectAsState()
+    val hasSavedSession by viewModel.hasSavedSession.collectAsState()
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
     val scope = rememberCoroutineScope()
 
     var email by remember { mutableStateOf("pacjent@test.pl") } // pamiętać aby usunąć i zostawić puste
     var password by remember { mutableStateOf("test123!") } // pamiętać aby usunąć i zostawić puste
     var isPasswordVisible by remember { mutableStateOf(false) }
     var forcedPasswordChangeTarget by remember { mutableStateOf<LoginUiState.Success?>(null) }
+    var biometricErrorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.checkSavedSession()
+    }
 
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
@@ -252,6 +268,60 @@ fun LoginScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
+                    }
+
+                    val isBiometricEnabled = BiometricAuthManager.isBiometricEnabled(context)
+                    if (hasSavedSession && isBiometricEnabled) {
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                if (activity != null) {
+                                    biometricErrorMessage = null
+                                    BiometricAuthManager.showBiometricPrompt(
+                                        activity = activity,
+                                        title = "Logowanie biometryczne",
+                                        subtitle = "Potwierdź tożsamość, aby odblokować konto",
+                                        negativeButtonText = "Użyj hasła",
+                                        onSuccess = {
+                                            biometricErrorMessage = null
+                                            viewModel.signInWithBiometric()
+                                        },
+                                        onError = { _, errString ->
+                                            biometricErrorMessage = errString
+                                        }
+                                    )
+                                }
+                            },
+                            enabled = uiState !is LoginUiState.Loading,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = "Logowanie biometryczne",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Zaloguj biometrią",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    if (biometricErrorMessage != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = biometricErrorMessage.orEmpty(),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
