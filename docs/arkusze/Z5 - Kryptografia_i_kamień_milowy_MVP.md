@@ -78,7 +78,6 @@
 | **Wdrożenie BiometricPrompt API do biometrycznej autoryzacji sesji** | Michał Kamiński | Działające okno biometryczne przy starcie aplikacji i odblokowaniu sesji na emulatorze/telefonie; obsługa braku biometrii. | MASVS-AUTH-2 |
 | **Implementacja wygasania sesji i automatycznego wylogowania po bezczynności** | Patryk Czakon | Test bezczynności (inactivity timeout) powodujący automatyczne przejście do ekranu blokady i wyczyszczenie wrażliwych stanów z pamięci RAM. | MASVS-AUTH-1 |
 | **Egzekwowanie flagi `must_change_password` i polityka haseł** | Michał Kamiński | Test logowania na konto z wymuszoną zmianą hasła; blokada nawigacji do dashboardu do momentu nadania nowego, silnego hasła. | MASVS-AUTH-1 |
-| **Opracowanie kompletnego arkusza i raportu Z6 (Uwierzytelnianie i sesje)** | Michał Kamiński, Patryk Czakon | Plik `docs/arkusze/Z6 - Uwierzytelnianie_i_sesje.md` umieszczony w repozytorium. | Wymóg formalny Z6 |
 
 ---
 

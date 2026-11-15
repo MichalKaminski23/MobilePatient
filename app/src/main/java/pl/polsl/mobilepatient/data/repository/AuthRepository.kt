@@ -70,6 +70,65 @@ class AuthRepository {
         }
     }
 
+    suspend fun hasSavedSession(): Boolean {
+        return try {
+            client.auth.currentSessionOrNull() != null || client.auth.loadFromStorage()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    suspend fun signInWithBiometric(): Result<ShortProfileDto> {
+        return try {
+            val hasSession =
+                client.auth.currentSessionOrNull() != null || client.auth.loadFromStorage()
+            if (!hasSession) {
+                return Result.failure(
+                    IllegalStateException("Brak zapisanej sesji. Zaloguj się za pomocą hasła.")
+                )
+            }
+
+            val userId = client.auth.currentUserOrNull()?.id
+                ?: client.auth.currentSessionOrNull()?.user?.id
+                ?: return Result.failure(
+                    IllegalStateException("Nie udało się pobrać identyfikatora użytkownika z sesji.")
+                )
+
+            SupabaseProvider.cachedUserId = userId
+
+            val profile = client
+                .from("profiles")
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingleOrNull<ShortProfileDto>()
+                ?: return Result.failure(
+                    IllegalStateException("Nie znaleziono profilu użytkownika.")
+                )
+
+            try {
+                auditLogRepository.logEvent(
+                    action = "LOGIN_BIOMETRIC",
+                    entityType = "profiles",
+                    entityId = userId,
+                    actorId = userId
+                )
+            } catch (_: Exception) {
+            }
+
+            Result.success(profile)
+        } catch (exception: Exception) {
+            Result.failure(
+                IllegalStateException(
+                    "Błąd autoryzacji biometrycznej: ${exception.localizedMessage ?: "Wymagane logowanie hasłem."}",
+                    exception
+                )
+            )
+        }
+    }
+
     suspend fun signOut() {
         val currentUserId = client.auth.currentUserOrNull()?.id ?: SupabaseProvider.cachedUserId
         if (currentUserId != null) {
