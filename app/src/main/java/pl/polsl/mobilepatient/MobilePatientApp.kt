@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
 import pl.polsl.mobilepatient.data.security.SessionTimeoutManager
 import pl.polsl.mobilepatient.ui.admin.AdminDashboardScreen
-import pl.polsl.mobilepatient.ui.auth.login.LoginScreen
+import pl.polsl.mobilepatient.ui.auth.LoginScreen
 import pl.polsl.mobilepatient.ui.doctor.DoctorDashboardScreen
 import pl.polsl.mobilepatient.ui.patient.PatientDashboardScreen
 import pl.polsl.mobilepatient.ui.theme.MobilePatientTheme

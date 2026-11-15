@@ -1,4 +1,4 @@
-package pl.polsl.mobilepatient.ui.auth.login
+package pl.polsl.mobilepatient.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +61,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import pl.polsl.mobilepatient.data.repository.AuthRepository
 import pl.polsl.mobilepatient.data.security.BiometricAuthManager
+import pl.polsl.mobilepatient.ui.auth.login.LoginUiState
+import pl.polsl.mobilepatient.ui.auth.login.LoginViewModel
 import pl.polsl.mobilepatient.ui.components.ChangePasswordDialog
 
 @Composable
