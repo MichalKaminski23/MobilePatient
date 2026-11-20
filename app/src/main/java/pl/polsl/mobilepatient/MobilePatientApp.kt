@@ -61,6 +61,9 @@ fun MobilePatientApp(
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
                     if (loggedInRole != null && SessionTimeoutManager.checkTimeout()) {
+                        scope.launch {
+                            authRepository.signOut()
+                        }
                         loggedInRole = null
                         loggedInName = ""
                     }
@@ -78,6 +81,7 @@ fun MobilePatientApp(
                 while (true) {
                     delay(30_000L.milliseconds)
                     if (SessionTimeoutManager.checkTimeout()) {
+                        authRepository.signOut()
                         loggedInRole = null
                         loggedInName = ""
                         break
