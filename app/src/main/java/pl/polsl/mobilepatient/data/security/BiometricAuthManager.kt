@@ -49,7 +49,8 @@ object BiometricAuthManager {
         title: String = "Uwierzytelnienie biometryczne",
         subtitle: String = "Potwierdź tożsamość odciskiem palca lub biometrią",
         negativeButtonText: String = "Użyj hasła",
-        onSuccess: () -> Unit,
+        cryptoObject: BiometricPrompt.CryptoObject? = null,
+        onSuccess: (BiometricPrompt.AuthenticationResult) -> Unit,
         onError: (errorCode: Int, errString: String) -> Unit,
         onFailed: () -> Unit = {}
     ) {
@@ -57,7 +58,7 @@ object BiometricAuthManager {
         val callback = object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
-                onSuccess()
+                onSuccess(result)
             }
 
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -78,6 +79,10 @@ object BiometricAuthManager {
             .setAllowedAuthenticators(BIOMETRIC_STRONG)
             .build()
 
-        BiometricPrompt(activity, executor, callback).authenticate(promptInfo)
+        if (cryptoObject != null) {
+            BiometricPrompt(activity, executor, callback).authenticate(promptInfo, cryptoObject)
+        } else {
+            BiometricPrompt(activity, executor, callback).authenticate(promptInfo)
+        }
     }
 }

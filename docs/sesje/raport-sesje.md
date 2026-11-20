@@ -31,7 +31,7 @@ sequenceDiagram
 | Hasło                   | Użytkownik wpisuje    | Nie jest trzymane lokalnie (tylko wysyłane) | Zależy od użytkownika           | Zmiana hasła                                    | Hasło wpisywane tekstowo (ryzyko podglądnięcia)            | Użycie biometrii po 1-szym logowaniu (`BiometricAuthManager.kt`) |
 | Token dostępu (JWT)     | Serwer (Supabase)     | `EncryptedSharedPreferences` (AES256_GCM)   | 1 godzina (Supabase default)    | `signOut()`, upływ czasu                        | Jeśli przechwycony, daje autoryzację do API na krótki czas | Zapis z szyfrowaniem (`EncryptedSessionManager.kt`) wg MASVS     |
 | Token odświeżania       | Serwer (Supabase)     | `EncryptedSharedPreferences` (AES256_GCM)   | Bezterminowo lub do wylogowania | `signOut()` usuwa z bazy serwera i z urządzenia | Wyciek umożliwia wystawianie nowych tokenów                | Szyfrowanie lokalnie. Przewidziane logowanie biometrią.          |
-| Potwierdzenie biometrii | OS (BiometricManager) | Pamięć RAM                                  | Chwilowo - by odblokować sesję  | -                                               | Zwraca tylko true/false, nie podpisy kryptograficzne       | Wymuszono użycie `BIOMETRIC_STRONG` (Tylko bezpieczne czujniki)  |
+| Potwierdzenie biometrii | OS (BiometricManager) | Pamięć RAM                                  | Chwilowo - by odblokować sesję  | -                                               | Problem z autoryzacją True/False (ryzyko oszukania np. Fridą)| Rozwiązano poprzez zaimplementowanie przekazywania `CryptoObject` w parametrach okna w module `BiometricAuthManager.kt`. |
 
 ## 1.2 Scenariusze
 

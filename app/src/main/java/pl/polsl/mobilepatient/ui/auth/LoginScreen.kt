@@ -283,7 +283,8 @@ fun LoginScreen(
                                         title = "Logowanie biometryczne",
                                         subtitle = "Potwierdź tożsamość, aby odblokować konto",
                                         negativeButtonText = "Użyj hasła",
-                                        onSuccess = {
+                                        cryptoObject = null,
+                                        onSuccess = { _ ->
                                             biometricErrorMessage = null
                                             viewModel.signInWithBiometric()
                                         },
