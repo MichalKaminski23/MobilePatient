@@ -157,7 +157,10 @@ fun PatientDashboardScreen(
             }
 
             PatientDestination.SETTINGS -> {
-                SettingsScreen(onBack = { currentDestination = PatientDestination.OVERVIEW })
+                SettingsScreen(
+                    onBack = { currentDestination = PatientDestination.OVERVIEW },
+                    onLogoutAllDevices = onLogout
+                )
             }
         }
     }

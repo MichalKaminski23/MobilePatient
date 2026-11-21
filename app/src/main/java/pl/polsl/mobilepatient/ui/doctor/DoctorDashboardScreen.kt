@@ -331,9 +331,12 @@ fun DoctorDashboardScreen(
                                 }
 
                                 DoctorDestination.SETTINGS -> {
-                                    SettingsScreen(onBack = {
-                                        currentDestination = DoctorDestination.OVERVIEW
-                                    })
+                                    SettingsScreen(
+                                        onBack = {
+                                            currentDestination = DoctorDestination.OVERVIEW
+                                        },
+                                        onLogoutAllDevices = onLogout
+                                    )
                                 }
                             }
                         }

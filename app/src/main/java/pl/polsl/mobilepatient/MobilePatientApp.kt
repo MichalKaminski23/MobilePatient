@@ -60,12 +60,22 @@ fun MobilePatientApp(
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    if (loggedInRole != null && SessionTimeoutManager.checkTimeout()) {
-                        scope.launch {
-                            authRepository.signOut()
+                    if (loggedInRole != null) {
+                        if (SessionTimeoutManager.checkTimeout()) {
+                            scope.launch {
+                                authRepository.signOut()
+                            }
+                            loggedInRole = null
+                            loggedInName = ""
+                        } else {
+                            scope.launch {
+                                if (!authRepository.validateRemoteSession()) {
+                                    authRepository.signOut()
+                                    loggedInRole = null
+                                    loggedInName = ""
+                                }
+                            }
                         }
-                        loggedInRole = null
-                        loggedInName = ""
                     }
                 }
             }

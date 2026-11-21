@@ -48,15 +48,21 @@
   żądanie do API Supabase o unieważnieniu sesji faktycznie dociera na serwer, po czym natychmiastowo
   niszczone są powiązane dane z lokalnego magazynu aplikacji. Dodatkowo zdarzenia są ujęte w ramach
   zapisów audytu (AuditLog).
+* **Zdalne wylogowanie ze wszystkich urządzeń (Global Sign-Out):** Zaimplementowano funkcję
+  `AuthRepository.signOutFromAllDevices()` (`SignOutScope.GLOBAL`) oraz interfejs w `SettingsScreen.kt`,
+  umożliwiający użytkownikowi natychmiastowe zakończenie wszystkich sesji na innych urządzeniach.
+* **Aktywna weryfikacja ważności sesji serwera (Walidacja unieważnionego JWT):** Dodano metodę
+  `AuthRepository.validateRemoteSession()` odpytującą endpoint serwera przy każdym wznowieniu
+  aplikacji (`MobilePatientApp.kt`), co natychmiast odcina dostęp w razie zdalnego unieważnienia sesji.
 
 ---
 
-## 3. Czego brakuje?
+## 3. Czego brakowało i jak to rozwiązano?
 
-| Luka / zagrożenie                                                              | Gdzie                                         | Ryzyko (niskie / średnie / wysokie) | Dlaczego takie ryzyko                                                                                                                                                                                                                                                                 |
-|--------------------------------------------------------------------------------|-----------------------------------------------|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Brak "Zdalnego wylogowania" i wymuszenia końca na wszystkich urządzeniach**  | Konto użytkownika / Konfiguracja Supabase API | **Średnie**                         | Opcja wylogowania ze wszystkich sesji w przypadku wykrycia nieautoryzowanego zalogowania na innym urządzeniu zapobiegłaby przejęciu dostępu do konta przez dłuższą chwilę.                                                                                                            |
-| **Natychmiastowe unieważnienie wciąż trwającego (wydanego) tokenu JWT**        | Backend dostawcy Auth                         | **Niskie / Średnie**                | Standardowe działanie JWT (tzw. "stateless") oznacza, że raz wystawiony zaufany token jest ważny do końca zadeklarowanego czasu (u nas ok. 1 godziny), nawet po kliknięciu "wyloguj", aż backend samodzielnie go nie zweryfikuje poprzez odrzucenie jako wygasłego na czarnej liście. |
+| Zidentyfikowana luka / zagrożenie | Gdzie | Ryzyko początkowe | Rozwiązanie wdrożone w aplikacji |
+|---|---|---|---|
+| **Brak "Zdalnego wylogowania" i wymuszenia końca na wszystkich urządzeniach** | Konto użytkownika / Supabase Auth API | **Średnie** | Wdrożono `signOut(SignOutScope.GLOBAL)` w `AuthRepository.kt:132-163` z audytem zdarzenia `LOGOUT_GLOBAL` oraz przycisk w `SettingsScreen.kt`. |
+| **Natychmiastowe unieważnienie wciąż trwającego (wydanego) tokenu JWT** | Backend dostawcy Auth / Klient Android | **Niskie / Średnie** | Zaimplementowano `validateRemoteSession()` sprawdzaną przy zdarzeniu `ON_RESUME` w `MobilePatientApp.kt:63-83`. W razie unieważnienia sesji na backendzie aplikacja natychmiast niszczy lokalną sesję. |
 
 ---
 

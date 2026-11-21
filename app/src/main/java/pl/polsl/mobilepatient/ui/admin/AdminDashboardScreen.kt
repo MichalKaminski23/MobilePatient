@@ -143,7 +143,10 @@ fun AdminDashboardScreen(
                 }
 
                 AdminDestination.SETTINGS -> {
-                    SettingsScreen(onBack = { currentDestination = AdminDestination.OVERVIEW })
+                    SettingsScreen(
+                        onBack = { currentDestination = AdminDestination.OVERVIEW },
+                        onLogoutAllDevices = onLogout
+                    )
                 }
             }
         }

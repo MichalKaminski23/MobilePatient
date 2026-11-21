@@ -1,5 +1,6 @@
 package pl.polsl.mobilepatient.data.repository
 
+import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
@@ -129,12 +130,12 @@ class AuthRepository {
         }
     }
 
-    suspend fun signOut() {
+    suspend fun signOut(scope: SignOutScope = SignOutScope.LOCAL) {
         val currentUserId = client.auth.currentUserOrNull()?.id ?: SupabaseProvider.cachedUserId
         if (currentUserId != null) {
             try {
                 auditLogRepository.logEvent(
-                    action = "LOGOUT",
+                    action = if (scope == SignOutScope.GLOBAL) "LOGOUT_GLOBAL" else "LOGOUT",
                     entityType = "profiles",
                     entityId = currentUserId,
                     actorId = currentUserId
@@ -143,6 +144,34 @@ class AuthRepository {
             }
         }
         SupabaseProvider.cachedUserId = null
-        client.auth.signOut()
+        try {
+            client.auth.signOut(scope = scope)
+        } catch (_: Exception) {
+            try {
+                client.auth.clearSession()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    suspend fun signOutFromAllDevices(): Result<Unit> {
+        return try {
+            signOut(scope = SignOutScope.GLOBAL)
+            Result.success(Unit)
+        } catch (exception: Exception) {
+            Result.failure(exception)
+        }
+    }
+
+    suspend fun validateRemoteSession(): Boolean {
+        return try {
+            if (client.auth.currentSessionOrNull() == null) {
+                return false
+            }
+            client.auth.retrieveUserForCurrentSession(updateSession = false)
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 }
